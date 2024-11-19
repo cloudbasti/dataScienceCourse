@@ -2,7 +2,8 @@ import pandas as pd
 
 df = pd.read_csv("umsatzdaten_gekuerzt.csv")
 
-# add weekdays to dataset (not needed in fact)
+# add weekdays to dataset (not needed in fact but its needed for the 
+# other solution with the for loop)
 
 df['Datum'] = pd.to_datetime(df['Datum'])
 
@@ -32,6 +33,7 @@ sunday = df[ (df['Datum'].dt.weekday == 6)]
 sundayAverage = sunday["Umsatz"].mean()
 
 # store results in array to pass to matplotlib
+
 
 
 # graphical visualisation
