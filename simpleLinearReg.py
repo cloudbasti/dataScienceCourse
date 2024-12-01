@@ -23,18 +23,6 @@ df_prepared = df.copy()
 df_prepared = df_prepared.dropna(subset=['Temperatur', 'Umsatz'])
 
 def predict_turnover(df_prepared, weather_feature='Temperatur'):
-    """
-    Implement simple linear regression to predict bakery turnover based on weather.
-    
-    Parameters:
-    df (pandas.DataFrame): DataFrame containing turnover and weather data
-    weather_feature (str): Name of the weather column to use as predictor
-    
-    Returns:
-    model: Fitted LinearRegression model
-    float: R-squared score
-    float: Root mean squared error
-    """
     
     # Prepare the data
     X = df_prepared[[weather_feature]]
