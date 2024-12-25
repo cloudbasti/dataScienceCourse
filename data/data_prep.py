@@ -1,23 +1,43 @@
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
 def prepare_features(df):
-    
     # Create a copy to avoid modifying the original
     df_prepared = df.copy()
     
-    # Convert date and add weekday
+    # Convert date
     df_prepared['Datum'] = pd.to_datetime(df_prepared['Datum'])
+    
+    # Create weekday name and dummies
     df_prepared['Wochentag'] = df_prepared['Datum'].dt.day_name()
+    weekday_dummies = pd.get_dummies(df_prepared['Wochentag'], prefix='weekday')
+    df_prepared = pd.concat([df_prepared, weekday_dummies], axis=1)
     
-    # Convert weekdays to numerical values
-    weekday_encoder = LabelEncoder()
-    df_prepared['Wochentag_encoded'] = weekday_encoder.fit_transform(df_prepared['Wochentag'])
-    
-    # Add is_weekend feature (1 for Saturday/Sunday, 0 for other days)
+    # Add is_weekend feature
     df_prepared['is_weekend'] = df_prepared['Datum'].dt.dayofweek.isin([5, 6]).astype(int)
     
-    return df_prepared, weekday_encoder
+    # Create month dummy variables
+    df_prepared['month'] = df_prepared['Datum'].dt.month
+    month_dummies = pd.get_dummies(df_prepared['month'], prefix='month')
+    df_prepared = pd.concat([df_prepared, month_dummies], axis=1)
+    
+    # Create season feature and dummies
+    # Fix: Use a different approach for seasons to avoid duplicate labels
+    df_prepared['season'] = df_prepared['month'].map({
+        12: 'Winter', 1: 'Winter', 2: 'Winter',
+        3: 'Spring', 4: 'Spring', 5: 'Spring',
+        6: 'Summer', 7: 'Summer', 8: 'Summer',
+        9: 'Autumn', 10: 'Autumn', 11: 'Autumn'
+    })
+    season_dummies = pd.get_dummies(df_prepared['season'], prefix='season')
+    df_prepared = pd.concat([df_prepared, season_dummies], axis=1)
+    
+    # Add cyclical encoding for month
+    df_prepared['month_sin'] = np.sin(2 * np.pi * df_prepared['month']/12)
+    df_prepared['month_cos'] = np.cos(2 * np.pi * df_prepared['month']/12)
+    
+    return df_prepared
 
 def handle_missing_values(df):
     """

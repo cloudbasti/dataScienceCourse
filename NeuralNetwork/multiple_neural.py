@@ -1,13 +1,16 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.metrics import r2_score, mean_squared_error
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
-import matplotlib.pyplot as plt
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt 
 
 import sys
 import os
@@ -18,41 +21,128 @@ from data.data_prep import prepare_features
 from data.data_prep import merge_datasets
 from data.data_prep import handle_missing_values
 
+def create_callbacks():
+    early_stopping = EarlyStopping(
+        monitor='val_loss',
+        patience=50,
+        restore_best_weights=True,
+        verbose=1
+    )
+    
+    reduce_lr = ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.5,
+        patience=50,
+        min_lr=0.00001,
+        verbose=1
+    )
+    
+    return [early_stopping, reduce_lr]
+
+def plot_detailed_history(history):
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+    
+    # Loss
+    ax1.plot(history.history['loss'], label='Training')
+    ax1.plot(history.history['val_loss'], label='Validation')
+    ax1.set_title('Loss Over Time')
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Loss')
+    ax1.legend()
+    
+    # MAE
+    ax2.plot(history.history['mae'], label='Training')
+    ax2.plot(history.history['val_mae'], label='Validation')
+    ax2.set_title('Mean Absolute Error Over Time')
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('MAE')
+    ax2.legend()
+    
+    # Learning Rate
+    if 'lr' in history.history:
+        ax3.plot(history.history['lr'])
+        ax3.set_title('Learning Rate Over Time')
+        ax3.set_xlabel('Epoch')
+        ax3.set_ylabel('Learning Rate')
+    
+    # Loss improvement rate
+    loss_improvements = np.diff(history.history['val_loss'])
+    ax4.plot(loss_improvements)
+    ax4.set_title('Validation Loss Improvement Rate')
+    ax4.set_xlabel('Epoch')
+    ax4.set_ylabel('Loss Change')
+    ax4.axhline(y=0, color='r', linestyle='--')
+      
+
+    plt.tight_layout()
+    plt.show()
+    
+    plt.savefig('detailed_history.png')
+    plt.close()
+
 def create_product_features(df):
-    """
-    Create product-specific features, indicators, and interactions.
-    """
     df_with_features = df.copy()
-    base_features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday', 
-                    'is_school_holiday', 'KielerWoche', 'is_weekend']
+    
+    # Base features grouped by type
+    weather_features = ['Temperatur', 'Bewoelkung']
+    time_features = ['Wochentag_encoded', 'is_weekend']
+    event_features = ['is_holiday', 'is_school_holiday', 'KielerWoche']
+    
     all_features = []
     
-    # Create product indicators and interactions
+    # 1. Create temperature polynomials (up to degree 3)
+    temp_poly = PolynomialFeatures(degree=3, include_bias=False)
+    temp_features = temp_poly.fit_transform(df_with_features[['Temperatur']])
+    feature_names = ['Temp', 'Temp2', 'Temp3']
+    
+    for i, name in enumerate(feature_names):
+        df_with_features[name] = temp_features[:, i]
+        all_features.append(name)
+    
+    # 2. Create weather interactions
+    df_with_features['Temp_Cloud'] = df_with_features['Temperatur'] * df_with_features['Bewoelkung']
+    all_features.append('Temp_Cloud')
+    
+    # 3. Create product-specific features
     for product_id in range(1, 7):
-        # Create product indicator (1 if this product, 0 otherwise)
+        # Product indicator
         product_col = f'is_product_{product_id}'
         df_with_features[product_col] = (df_with_features['Warengruppe'] == product_id).astype(int)
         all_features.append(product_col)
         
-        # Create interaction terms
-        for feature in base_features:
-            interaction_col = f'{feature}_product_{product_id}'
-            df_with_features[interaction_col] = df_with_features[product_col] * df_with_features[feature]
-            all_features.append(interaction_col)
+        # Product-specific weather effects
+        for weather in weather_features:
+            col_name = f'{weather}_product_{product_id}'
+            df_with_features[col_name] = df_with_features[product_col] * df_with_features[weather]
+            all_features.append(col_name)
+        
+        # Product-specific time effects
+        for time in time_features:
+            col_name = f'{time}_product_{product_id}'
+            df_with_features[col_name] = df_with_features[product_col] * df_with_features[time]
+            all_features.append(col_name)
+        
+        # Product-specific event effects
+        for event in event_features:
+            col_name = f'{event}_product_{product_id}'
+            df_with_features[col_name] = df_with_features[product_col] * df_with_features[event]
+            all_features.append(col_name)
+            
+        # Special interaction: temperature squared effect per product
+        col_name = f'Temp2_product_{product_id}'
+        df_with_features[col_name] = df_with_features[product_col] * df_with_features['Temp2']
+        all_features.append(col_name)
     
     return df_with_features, all_features
 
 def prepare_and_predict_umsatz_nn(df):
     """
-    Neural network model for predicting turnover with product interactions
+    Neural network model for predicting turnover with product interactions and polynomial features
     """
-    # Create product features and interactions
     df_with_features, feature_columns = create_product_features(df)
     
-    # Split data using our existing function
     X_train, X_test, y_train, y_test = split_train_validation(df_with_features, feature_columns)
     
-    # Scale the features and target
     scaler_X = StandardScaler()
     scaler_y = StandardScaler()
     
@@ -61,50 +151,39 @@ def prepare_and_predict_umsatz_nn(df):
     y_train_scaled = scaler_y.fit_transform(y_train.values.reshape(-1, 1)).ravel()
     y_test_scaled = scaler_y.transform(y_test.values.reshape(-1, 1)).ravel()
     
-    # Create the neural network
     model = Sequential([
-        Dense(128, activation='relu', input_shape=(len(feature_columns),)),
-        Dropout(0.3),
-        Dense(64, activation='relu'),
-        BatchNormalization(), 
-        Dropout(0.2),
-        Dense(32, activation='relu'),
-        Dropout(0.1),
-        Dense(16, activation='relu'),
-        Dense(1)
+        Dense(256, activation='relu', input_shape=(len(feature_columns),)),  # Increased from 128
+    Dropout(0.3),  # Decreased from 0.4
+    Dense(128, activation='relu'),  # Increased from 64
+    BatchNormalization(),
+    Dropout(0.2),  # Decreased from 0.3
+    Dense(64, activation='relu'),  # Increased from 32
+    Dropout(0.1),  # Decreased from 0.2
+    Dense(32, activation='relu'),  # Increased from 16
+    Dense(1)
     ])
     
-    # Compile the model
-    model.compile(optimizer=Adam(learning_rate=0.001),
+    model.compile(optimizer=Adam(learning_rate=0.01),
                  loss='mse',
                  metrics=['mae'])
     
-    early_stopping = EarlyStopping(
-    monitor='val_loss',
-    patience=30,
-    restore_best_weights=True
-)
+    # Using the new callbacks
+    callbacks = create_callbacks()
     
-    # Train the model
     history = model.fit(X_train_scaled, y_train_scaled,
-                       epochs=200,
+                       epochs=100,
                        batch_size=32,
                        validation_split=0.2,
-                       callbacks=[early_stopping],
+                       callbacks=callbacks,
                        verbose=1)
     
-    # Make predictions
     y_pred_scaled = model.predict(X_test_scaled)
-    
-    # Inverse transform predictions and actual values
     y_pred = scaler_y.inverse_transform(y_pred_scaled)
     y_test_unscaled = y_test.values.reshape(-1, 1)
     
-    # Calculate overall metrics
     r2 = r2_score(y_test_unscaled, y_pred)
     rmse = np.sqrt(mean_squared_error(y_test_unscaled, y_pred))
     
-    # Calculate metrics per product category
     product_metrics = {}
     for product_id in range(1, 7):
         mask = X_test[f'is_product_{product_id}'] == 1
@@ -114,17 +193,6 @@ def prepare_and_predict_umsatz_nn(df):
             product_metrics[f"Product {product_id}"] = {'R2': product_r2, 'RMSE': product_rmse}
     
     return model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns
-
-def plot_training_history(history):
-    """Plot training and validation loss"""
-    plt.figure(figsize=(10, 6))
-    plt.plot(history.history['loss'], label='Training Loss')
-    plt.plot(history.history['val_loss'], label='Validation Loss')
-    plt.title('Model Loss During Training')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.show()
 
 def main():
     # Load and prepare data
@@ -147,40 +215,11 @@ def main():
         print(f"R-squared: {metrics['R2']:.3f}")
         print(f"RMSE: {metrics['RMSE']:.2f}")
     
-    # Example predictions
-    print("\nExample Predictions:")
-    for product_id in range(1, 7):
-        # Create new data frame with product indicators
-        new_data = pd.DataFrame({f'is_product_{i}': [1 if i == product_id else 0] for i in range(1, 7)})
-        
-        # Add interaction terms
-        base_values = {
-            'Temperatur': 24,
-            'Bewoelkung': 3,
-            'Wochentag_encoded': weekday_encoder.transform(['Wednesday'])[0],
-            'is_holiday': 0,
-            'is_school_holiday': 1,
-            'KielerWoche': 1,
-            'is_weekend': 0
-        }
-        
-        # Create interaction terms
-        for i in range(1, 7):
-            for feature, value in base_values.items():
-                new_data[f'{feature}_product_{i}'] = new_data[f'is_product_{i}'] * value
-        
-        # Ensure columns are in the right order
-        example_data = new_data[feature_columns]
-        
-        # Scale and predict
-        example_scaled = scaler_X.transform(example_data)
-        pred_scaled = model.predict(example_scaled)
-        pred = scaler_y.inverse_transform(pred_scaled)
-        
-        print(f"\nPredicted turnover for Product {product_id}: {pred[0][0]:.2f}")
+    # Print when training stopped
+    print(f"\nTraining stopped at epoch {len(history.history['loss'])}")
     
-    # Plot training history
-    plot_training_history(history)
+    # Plot both the simple and detailed training history
+    plot_detailed_history(history)
 
 if __name__ == "__main__":
     main()
