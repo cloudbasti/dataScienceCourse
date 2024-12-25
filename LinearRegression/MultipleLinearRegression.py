@@ -10,7 +10,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.train_split import split_train_validation
-from data.feature_prep import prepare_features
+from data.data_prep import prepare_features
+from data.data_prep import merge_datasets
+from data.data_prep import handle_missing_values
+
 
 def create_interaction_features(df):
     """
@@ -41,15 +44,12 @@ def create_interaction_features(df):
     
     return df_with_interactions, product_features
 
-def prepare_and_predict_umsatz(df):
+def prepare_and_predict_umsatz(df, weekday_encoder):
     """
     Main function that creates a single model with product-specific equations.
     """
-    # Prepare basic features
-    df_cleaned, weekday_encoder = prepare_features(df)
-    
     # Add interaction terms for linear regression
-    df_with_interactions, product_features = create_interaction_features(df_cleaned)
+    df_with_interactions, product_features = create_interaction_features(df)
     
     # Split data
     X_train, X_test, y_train, y_test = split_train_validation(df_with_interactions, product_features)
@@ -95,7 +95,7 @@ def prepare_and_predict_umsatz(df):
             'coefficients': feature_coefs
         }
     
-    return model, product_equations, r2, rmse, weekday_encoder, product_metrics, product_features
+    return model, product_equations, r2, rmse, product_metrics, product_features
 
 def print_product_equations(product_equations):
     """
@@ -112,12 +112,20 @@ def print_product_equations(product_equations):
 
 def main():
     # Load and merge data
-    weather = pd.read_csv("data/wetter.csv")
-    turnover = pd.read_csv("data/umsatzdaten_gekuerzt.csv")
-    df = pd.merge(weather, turnover, on='Datum', how='outer')
+    df_merged = merge_datasets(
+        weather_path="data/wetter.csv",
+        turnover_path="data/umsatzdaten_gekuerzt.csv",
+        kiwo_path="data/kiwo.csv"
+    )
+    
+    # 2. Prepare features
+    df_featured, weekday_encoder = prepare_features(df_merged)
+    
+    # 3. Handle missing values
+    df_cleaned = handle_missing_values(df_featured)
 
     # Train the model
-    model, product_equations, r2, rmse, weekday_encoder, product_metrics, product_features = prepare_and_predict_umsatz(df)
+    model, product_equations, r2, rmse, product_metrics, product_features = prepare_and_predict_umsatz(df_cleaned, weekday_encoder)
 
     # Print overall results
     print("\nOverall Model Performance:")
@@ -146,8 +154,8 @@ def main():
                 new_data[f'{feature}_product_{i}'] = new_data[f'is_product_{i}'] * value
         
         predicted_umsatz = model.predict(new_data[product_features])[0]
-        #print(f"\nPredicted turnover for Product {product_id} "
-        #      f"(Wednesday, Temp=24, Clouds=3): {predicted_umsatz:.2f}")
+        print(f"\nPredicted turnover for Product {product_id} "
+              f"(Wednesday, Temp=24, Clouds=3): {predicted_umsatz:.2f}")
 
 if __name__ == "__main__":
     main()
