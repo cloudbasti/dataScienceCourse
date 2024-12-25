@@ -9,6 +9,9 @@ DATENERGÄNZUNG
 
 MEHR FEATURES, basierend auch auf neuen Daten
 3. create more features for the multiple linear regression and thus improve it. 
+---
+KIELER WOCHE ALS Feature hinzufügen
+Recherche zu dem Wettercode machen
 
 DATENOPTIMIERUNG UND ERGÄNZUNG 
 7. alle Eure Modellvariablen auf die Existenz von fehlenden und unplausiblen Werten hin untersuchen 
