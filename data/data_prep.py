@@ -59,16 +59,21 @@ def handle_missing_values(df):
     return df_cleaned
 
 
-def merge_datasets(weather_path, turnover_path, kiwo_path):
+def merge_datasets():
     # Load all datasets
-    weather = pd.read_csv(weather_path)
-    turnover = pd.read_csv(turnover_path)
-    kiwo = pd.read_csv(kiwo_path)
+    weather = pd.read_csv("data/wetter.csv")
+    turnover = pd.read_csv("data/umsatzdaten_gekuerzt.csv")
+    kiwo = pd.read_csv("data/kiwo.csv")
+    school_holidays = pd.read_csv("data/school_holidays.csv")
+    public_holidays = pd.read_csv("data/bank_holidays.csv")
+
     
     # Convert dates to datetime in all dataframes
     weather['Datum'] = pd.to_datetime(weather['Datum'])
     turnover['Datum'] = pd.to_datetime(turnover['Datum'])
     kiwo['Datum'] = pd.to_datetime(kiwo['Datum'])
+    school_holidays['Datum'] =  pd.to_datetime(school_holidays['Datum'])
+    public_holidays['Datum'] =  pd.to_datetime(school_holidays['Datum'])
     
     # Find start and end dates from turnover data
     start_date = turnover['Datum'].min()
@@ -82,8 +87,17 @@ def merge_datasets(weather_path, turnover_path, kiwo_path):
     # Merge with Kieler Woche data
     df = pd.merge(df, kiwo, on='Datum', how='outer')
     
+    df = pd.merge(df, school_holidays, on='Datum', how='outer')
+    
+    df = pd.merge(df, public_holidays, on='Datum', how='outer')
+    
+    
     # Fill NaN values in KielerWoche column with 0
     df['KielerWoche'] = df['KielerWoche'].fillna(0)
+    df['is_school_holiday'] = df['is_school_holiday'].fillna(0)
+    df['is_holiday'] = df['is_holiday'].fillna(0)
+    
+    #print(df.head())
     
     # Filter data to only include dates within the turnover date range
     df = df[(df['Datum'] >= start_date) & (df['Datum'] <= end_date)]

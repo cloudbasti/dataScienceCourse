@@ -4,15 +4,16 @@
 
 
 DATENERGÄNZUNG
-1. add holiday data (schleswig holstein)
 2. add Brückentage before and after holidays
-3. Wochenende als Feature hinzufügen
+3. Recherche zu dem Wettercode machen
 
 MEHR FEATURES, basierend auch auf neuen Daten
-3. create more features for the multiple linear regression and thus improve it. 
----
-KIELER WOCHE ALS Feature hinzufügen
-Recherche zu dem Wettercode machen
+
+1. Wochenende 
+2. Kieler Woche 
+3. Schulferien
+4. Feiertage
+5. Wettercode
 
 DATENOPTIMIERUNG UND ERGÄNZUNG 
 7. alle Eure Modellvariablen auf die Existenz von fehlenden und unplausiblen Werten hin untersuchen 

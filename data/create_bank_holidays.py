@@ -76,13 +76,13 @@ holidays = [
 ]
 
 # Create DataFrame
-df = pd.DataFrame(holidays, columns=['holiday_name','date'])
+df = pd.DataFrame(holidays, columns=['holiday_name','Datum'])
 
 # Convert date to datetime
-df['date'] = pd.to_datetime(df['date'])
+df['Datum'] = pd.to_datetime(df['Datum'])
 
 # Sort by date
-df = df.sort_values('date')
+df = df.sort_values('Datum')
 
 
 
@@ -94,12 +94,12 @@ print("\nFirst few holidays:")
 print(df.head())
 
 # Save to CSV
-df.to_csv('data/german_bank_holidays.csv', index=False)
+df.to_csv('data/bank_holidays.csv', index=False)
 
 # Display some basic statistics
 print("\nSummary:")
 print(f"Total number of holidays: {len(df)}")
-print(f"Date range: from {df['date'].min().date()} to {df['date'].max().date()}")
+print(f"Date range: from {df['Datum'].min().date()} to {df['Datum'].max().date()}")
 print(f"\nUnique holidays ({len(df['holiday_name'].unique())} total):")
 for holiday in sorted(df['holiday_name'].unique()):
     print(f"- {holiday}")

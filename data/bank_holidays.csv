@@ -1,4 +1,4 @@
-holiday_name,date,is_holiday
+holiday_name,Datum,is_holiday
 Neujahr,2013-01-01,1
 Karfreitag,2013-03-29,1
 Ostermontag,2013-04-01,1
