@@ -6,6 +6,7 @@
 DATENERGÄNZUNG
 1. add holiday data (schleswig holstein)
 2. add Brückentage before and after holidays
+3. Wochenende als Feature hinzufügen
 
 MEHR FEATURES, basierend auch auf neuen Daten
 3. create more features for the multiple linear regression and thus improve it. 

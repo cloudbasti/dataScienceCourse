@@ -1,8 +1,8 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_squared_error
-from sklearn.preprocessing import LabelEncoder
+#from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
 import sys
@@ -153,9 +153,9 @@ def main():
             for feature, value in base_values.items():
                 new_data[f'{feature}_product_{i}'] = new_data[f'is_product_{i}'] * value
         
-        predicted_umsatz = model.predict(new_data[product_features])[0]
-        print(f"\nPredicted turnover for Product {product_id} "
-              f"(Wednesday, Temp=24, Clouds=3): {predicted_umsatz:.2f}")
+        #predicted_umsatz = model.predict(new_data[product_features])[0]
+        #print(f"\nPredicted turnover for Product {product_id} "
+        #      f"(Wednesday, Temp=24, Clouds=3): {predicted_umsatz:.2f}")
 
 if __name__ == "__main__":
     main()

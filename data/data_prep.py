@@ -17,6 +17,15 @@ def prepare_features(df):
     return df_prepared, weekday_encoder
 
 def handle_missing_values(df):
+    """
+    Remove rows with missing values in key columns and save removed rows to a CSV file.
+    
+    Parameters:
+    df (pandas.DataFrame): Input dataframe
+    
+    Returns:
+    pandas.DataFrame: Dataframe with rows containing missing values removed
+    """
     df_cleaned = df.copy()
     
     # Define columns to check for missing values
@@ -24,6 +33,13 @@ def handle_missing_values(df):
     
     # Store original length
     original_len = len(df_cleaned)
+    
+    # Identify rows with missing values
+    missing_mask = df_cleaned[columns_to_check].isnull().any(axis=1)
+    deleted_rows = df_cleaned[missing_mask]
+    
+    # Save deleted rows to CSV
+    deleted_rows.to_csv("data/deleted.csv", index=False)
     
     # Drop rows with missing values in specified columns
     df_cleaned = df_cleaned.dropna(subset=columns_to_check)
@@ -44,7 +60,6 @@ def handle_missing_values(df):
 
 
 def merge_datasets(weather_path, turnover_path, kiwo_path):
-    
     # Load all datasets
     weather = pd.read_csv(weather_path)
     turnover = pd.read_csv(turnover_path)
@@ -55,6 +70,12 @@ def merge_datasets(weather_path, turnover_path, kiwo_path):
     turnover['Datum'] = pd.to_datetime(turnover['Datum'])
     kiwo['Datum'] = pd.to_datetime(kiwo['Datum'])
     
+    # Find start and end dates from turnover data
+    start_date = turnover['Datum'].min()
+    end_date = turnover['Datum'].max()
+    
+    print(f"Turnover data ranges from {start_date} to {end_date}")
+    
     # Merge weather and turnover first
     df = pd.merge(weather, turnover, on='Datum', how='outer')
     
@@ -63,6 +84,13 @@ def merge_datasets(weather_path, turnover_path, kiwo_path):
     
     # Fill NaN values in KielerWoche column with 0
     df['KielerWoche'] = df['KielerWoche'].fillna(0)
+    
+    # Filter data to only include dates within the turnover date range
+    df = df[(df['Datum'] >= start_date) & (df['Datum'] <= end_date)]
+    
+    # here are all rows removed from the final merged dataframe for which no turnover data
+    # was available from the very beginning. Its not necessary to handle missing values for this 
+    # later anyways if the data didnt exist. 
     
     return df
 
