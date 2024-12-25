@@ -3,8 +3,6 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score, mean_squared_error
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import callbacks
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
 from tensorflow.keras.optimizers import Adam
@@ -80,6 +78,12 @@ def prepare_and_predict_umsatz_nn(df):
     model.compile(optimizer=Adam(learning_rate=0.001),
                  loss='mse',
                  metrics=['mae'])
+    
+    early_stopping = EarlyStopping(
+    monitor='val_loss',
+    patience=30,
+    restore_best_weights=True
+)
     
     # Train the model
     history = model.fit(X_train_scaled, y_train_scaled,
