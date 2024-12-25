@@ -14,6 +14,9 @@ def prepare_features(df):
     weekday_encoder = LabelEncoder()
     df_prepared['Wochentag_encoded'] = weekday_encoder.fit_transform(df_prepared['Wochentag'])
     
+    # Add is_weekend feature (1 for Saturday/Sunday, 0 for other days)
+    df_prepared['is_weekend'] = df_prepared['Datum'].dt.dayofweek.isin([5, 6]).astype(int)
+    
     return df_prepared, weekday_encoder
 
 def handle_missing_values(df):

@@ -9,7 +9,7 @@ DATENERGÄNZUNG
 
 MEHR FEATURES, basierend auch auf neuen Daten
 
-1. Wochenende 
+1. Wochenende
 2. Kieler Woche
 3. Schulferien 4. Feiertage (Schulferien und sowieso Feiertag?)
 5. Wettercode

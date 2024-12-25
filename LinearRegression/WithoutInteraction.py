@@ -16,7 +16,7 @@ def train_product_models(df):
     """
     Train separate models for each product category.
     """
-    features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday', 'is_school_holiday']
+    features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday', 'is_school_holiday', 'KielerWoche']
     product_models = {}
     product_metrics = {}
     product_equations = {}
@@ -74,6 +74,7 @@ def main():
     df_featured, weekday_encoder = prepare_features(df_merged)
     df_cleaned = handle_missing_values(df_featured)
     
+    
     # Train models
     product_models, product_metrics, product_equations = train_product_models(df_cleaned)
     
@@ -87,6 +88,7 @@ def main():
     # Print equations
     print_product_equations(product_equations)
     
+    
     # Example predictions
     print("\nExample Predictions:")
     example_data = pd.DataFrame({
@@ -94,7 +96,8 @@ def main():
         'Bewoelkung': [3],
         'Wochentag_encoded': [weekday_encoder.transform(['Wednesday'])[0]],
         'is_holiday': [0],
-        'is_school_holiday': [1]
+        'is_school_holiday': [1],
+        'KielerWoche': [1]
     })
     
     for product_id, model in product_models.items():
