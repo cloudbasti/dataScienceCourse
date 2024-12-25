@@ -10,10 +10,10 @@ DATENERGÄNZUNG
 MEHR FEATURES, basierend auch auf neuen Daten
 
 1. Wochenende 
-2. Kieler Woche 
-3. Schulferien
-4. Feiertage
+2. Kieler Woche
+3. Schulferien 4. Feiertage (Schulferien und sowieso Feiertag?)
 5. Wettercode
+6. Jahreszeiten
 
 DATENOPTIMIERUNG UND ERGÄNZUNG 
 7. alle Eure Modellvariablen auf die Existenz von fehlenden und unplausiblen Werten hin untersuchen 

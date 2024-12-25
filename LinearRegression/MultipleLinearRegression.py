@@ -21,7 +21,7 @@ def create_interaction_features(df):
     This is specific to linear regression modeling.
     """
     df_with_interactions = df.copy()
-    base_features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday']
+    base_features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday', 'is_school_holiday']
     product_features = []
     
     # Create interaction terms for each product
@@ -76,7 +76,7 @@ def prepare_and_predict_umsatz(df, weekday_encoder):
     
     # Extract coefficients for each product
     product_equations = {}
-    base_features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday']
+    base_features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday', 'is_school_holiday']
     
     for product_id in range(1, 7):
         # Get product indicator coefficient
@@ -144,7 +144,7 @@ def main():
         new_data = pd.DataFrame({f'is_product_{i}': [1 if i == product_id else 0] for i in range(1, 7)})
         
         # Add interaction terms
-        base_values = {'Temperatur': 24, 'Bewoelkung': 3, 'Wochentag_encoded': weekday_encoder.transform(['Wednesday'])[0], 'is_holiday': 0}
+        base_values = {'Temperatur': 24, 'Bewoelkung': 3, 'Wochentag_encoded': weekday_encoder.transform(['Wednesday'])[0], 'is_holiday': 0, 'is_school_holiday': 1}
         for i in range(1, 7):
             for feature, value in base_values.items():
                 new_data[f'{feature}_product_{i}'] = new_data[f'is_product_{i}'] * value
