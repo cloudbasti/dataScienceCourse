@@ -16,7 +16,7 @@ def train_product_models(df):
     """
     Train separate models for each product category.
     """
-    features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday', 'is_school_holiday', 'KielerWoche']
+    features = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded', 'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_weekend']
     product_models = {}
     product_metrics = {}
     product_equations = {}
@@ -97,7 +97,8 @@ def main():
         'Wochentag_encoded': [weekday_encoder.transform(['Wednesday'])[0]],
         'is_holiday': [0],
         'is_school_holiday': [1],
-        'KielerWoche': [1]
+        'KielerWoche': [1],
+        'is_weekend': [1]
     })
     
     for product_id, model in product_models.items():
