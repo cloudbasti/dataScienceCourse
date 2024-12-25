@@ -5,13 +5,11 @@ from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
-weather = pd.read_csv("wetter.csv")
-kiwo = pd.read_csv("kiwo.csv")
-turnover = pd.read_csv("umsatzdaten_gekuerzt.csv")
-
-df = pd.merge(weather, turnover, on='Datum', how='outer')
-
-def prepare_and_predict_umsatz(df):
+def prepare_features(df):
+    """
+    Prepare features from the raw dataframe.
+    Returns processed dataframe with new features.
+    """
     # Create a copy to avoid modifying the original
     df_prepared = df.copy()
     
@@ -23,9 +21,6 @@ def prepare_and_predict_umsatz(df):
     label_encoder = LabelEncoder()
     df_prepared['Wochentag_encoded'] = label_encoder.fit_transform(df_prepared['Wochentag'])
     
-    # Define features
-    feature_columns = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded']
-    
     # Drop rows with missing values
     columns_to_check = ['Temperatur', 'Bewoelkung', 'Umsatz']
     df_cleaned = df_prepared.dropna(subset=columns_to_check)
@@ -34,14 +29,44 @@ def prepare_and_predict_umsatz(df):
     rows_removed = len(df_prepared) - len(df_cleaned)
     print(f"Removed {rows_removed} rows with missing values")
     
-    # Prepare the data
+    return df_cleaned, label_encoder
+
+def split_train_validation(df_cleaned, feature_columns):
+    """
+    Split data into training and validation sets based on date ranges.
+    Returns features and target variables for both sets.
+    """
+    # Split data based on date
+    train_mask = (df_cleaned['Datum'] >= '2013-07-01') & (df_cleaned['Datum'] <= '2017-07-31')
+    test_mask = (df_cleaned['Datum'] >= '2017-08-01') & (df_cleaned['Datum'] <= '2018-07-31')
+    
+    # Prepare the features and target
     X = df_cleaned[feature_columns]
     y = df_cleaned['Umsatz']
     
-    # Split the data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    # Split the data using the masks
+    X_train = X[train_mask]
+    X_test = X[test_mask]
+    y_train = y[train_mask]
+    y_test = y[test_mask]
+    
+    print(f"Training set size: {len(X_train)} samples")
+    print(f"Test set size: {len(X_test)} samples")
+    
+    return X_train, X_test, y_train, y_test
+
+def prepare_and_predict_umsatz(df):
+    """
+    Main function that uses the preparation functions and fits the linear regression model.
+    """
+    # Define features
+    feature_columns = ['Temperatur', 'Bewoelkung', 'Wochentag_encoded']
+    
+    # Prepare features
+    df_cleaned, label_encoder = prepare_features(df)
+    
+    # Split data
+    X_train, X_test, y_train, y_test = split_train_validation(df_cleaned, feature_columns)
     
     # Create and fit the model
     model = LinearRegression()
@@ -57,11 +82,16 @@ def prepare_and_predict_umsatz(df):
     # Create a dictionary of feature coefficients
     feature_coefficients = dict(zip(feature_columns, model.coef_))
     
-    return model, feature_coefficients, r2, rmse, label_encoder
+    return model, feature_coefficients, r2, rmse, label_encoder, y_test, y_pred
 
+# Load and merge data
+weather = pd.read_csv("data/wetter.csv")
+kiwo = pd.read_csv("data/kiwo.csv")
+turnover = pd.read_csv("data/umsatzdaten_gekuerzt.csv")
+df = pd.merge(weather, turnover, on='Datum', how='outer')
 
 # Train the model
-model, coefficients, r2, rmse, label_encoder = prepare_and_predict_umsatz(df)
+model, coefficients, r2, rmse, label_encoder, y_test, y_pred = prepare_and_predict_umsatz(df)
 
 # Print results
 print("\nModel Performance:")

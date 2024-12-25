@@ -4,9 +4,9 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_squared_error
 import numpy as np
 
-weather = pd.read_csv("wetter.csv")
-kiwo = pd.read_csv("kiwo.csv")
-turnover = pd.read_csv("umsatzdaten_gekuerzt.csv")
+weather = pd.read_csv("data/wetter.csv")
+kiwo = pd.read_csv("data/kiwo.csv")
+turnover = pd.read_csv("data/umsatzdaten_gekuerzt.csv")
 
 df = pd.merge(weather, turnover, on='Datum', how='outer')
 
