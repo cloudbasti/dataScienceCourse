@@ -1,14 +1,16 @@
-from data.data_prep import analyze_weather_codes, analyze_wind_data
-from data.data_prep import prepare_features, merge_datasets, handle_missing_values
-from data.train_split import split_train_validation
-import pandas as pd
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import r2_score, mean_squared_error
-import sys
+
 import os
+import sys
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+import numpy as np
+import pandas as pd
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from data.train_split import split_train_validation  # NOQA
+from data.data_prep import prepare_features, merge_datasets, handle_missing_values  # NOQA
+from data.data_prep import analyze_weather_codes, analyze_wind_data  # NOQA
 
 
 def create_interaction_features(df):
@@ -17,7 +19,7 @@ def create_interaction_features(df):
     weekday_columns = [
         col for col in df_with_interactions.columns if col.startswith('weekday_')]
     month_columns = [
-        col for col in df_with_interactions.columns if col.startswith('weekday_')]
+        col for col in df_with_interactions.columns if col.startswith('month_')]
     season_columns = [
         col for col in df_with_interactions.columns if col.startswith('season_')]
     weekend_columns = [col for col in df_with_interactions.columns if col.startswith(
@@ -28,7 +30,7 @@ def create_interaction_features(df):
         col for col in df_with_interactions.columns if col.startswith('wind_')]
 
     base_features = ['Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday',
-                    'KielerWoche', 'is_nye'] + weekday_columns + month_columns + season_columns + weekend_columns + weather_category_columns + wind_category_columns
+                     'KielerWoche', 'is_nye'] + weekday_columns + month_columns + season_columns + weekend_columns + weather_category_columns + wind_category_columns
 
     # Add a print statement to check features
     print("Features being used:", base_features)
@@ -93,62 +95,38 @@ def prepare_and_predict_umsatz(df):
             product_metrics[f"Product {product_id}"] = {
                 'R2': product_r2, 'RMSE': product_rmse}
 
-   base_features = [
-    # Existing weather and temperature features
-        'Temperatur', 'Bewoelkung', 
-    
-    # Holiday and special day features
-        'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye',
-    
-    # Weekday features
-        'weekday_Friday', 'weekday_Monday', 'weekday_Saturday', 'weekday_Sunday',
-        'weekday_Thursday', 'weekday_Tuesday', 'weekday_Wednesday',
-    
-    # Season features
-         'season_Autumn', 'season_Spring', 'season_Summer', 'season_Winter',
-    
-    # Weekend features
-    'is_Weekday', 'is_Weekend', 
-    
-    # Weather condition features
-    'weather_clear', 'weather_no_precip', 'weather_dust_sand', 'weather_fog',
-    'weather_drizzle', 'weather_rain', 'weather_snow', 'weather_shower',
-    'weather_thunderstorm', 
-    
-    # Wind features
-    'wind_calm', 'wind_moderate', 'wind_strong',
-    
-    # Month features (add these)
-    'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6',
-    'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12',
-    
-    # Cyclical month encoding (optional but can be helpful)
-    'month_sin', 'month_cos'
+    base_features = [
+        'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye',
+        'weekday_Monday', 'weekday_Tuesday', 'weekday_Wednesday', 'weekday_Thursday',
+        'weekday_Friday', 'weekday_Saturday', 'weekday_Sunday',
+        'season_Winter', 'season_Spring', 'season_Summer', 'season_Autumn',
+        'is_Weekend', 'is_Weekday', 'weather_clear', 'weather_no_precip', 'weather_dust_sand', 'weather_fog',
+        'weather_drizzle', 'weather_rain', 'weather_snow', 'weather_shower',
+        'weather_thunderstorm', 'wind_calm', 'wind_moderate', 'wind_strong', 'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6',
+        'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12'
     ]
-    
-    
+
     product_equations = {}
     scale_factor = scaler.scale_[0]  # Scale factor for Umsatz
     mean_umsatz = scaler.mean_[0]    # Mean of Umsatz
-    
+
     for product_id in unique_products:
         feature_coefs = {}
         idx = feature_columns.index(f'is_product_{product_id}')
         product_coef = model.coef_[idx] * scale_factor
-        
+
         for feature in base_features:
             interaction_col = f'int_{feature}_p{product_id}'
-            coef = model.coef_[feature_columns.index(interaction_col)] * scale_factor
+            coef = model.coef_[feature_columns.index(
+                interaction_col)] * scale_factor
             feature_coefs[feature] = coef
-        
+
         product_equations[product_id] = {
             'intercept': model.intercept_ * scale_factor + mean_umsatz,
             'coefficients': feature_coefs
         }
-    
+
     return model, product_equations, r2, rmse, product_metrics, feature_columns
-
-
 
 
 def print_product_equations(product_equations):
@@ -156,14 +134,15 @@ def print_product_equations(product_equations):
     print("\nProduct-specific Linear Equations:")
     ordered_features = [
         'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye',
-        'weekday_Monday', 'weekday_Tuesday', 'weekday_Wednesday', 'weekday_Thursday',  
+        'weekday_Monday', 'weekday_Tuesday', 'weekday_Wednesday', 'weekday_Thursday',
         'weekday_Friday', 'weekday_Saturday', 'weekday_Sunday',
         'season_Winter', 'season_Spring', 'season_Summer', 'season_Autumn',
         'is_Weekend', 'is_Weekday', 'weather_clear', 'weather_no_precip', 'weather_dust_sand', 'weather_fog',
         'weather_drizzle', 'weather_rain', 'weather_snow', 'weather_shower',
-        'weather_thunderstorm', 'wind_calm', 'wind_moderate', 'wind_strong'
+        'weather_thunderstorm', 'wind_calm', 'wind_moderate', 'wind_strong', 'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6',
+        'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12',
     ]
-    
+
     for product_id, eq in product_equations.items():
         print(f"\nProduct {product_id}:")
         equation = f"Umsatz = {eq['intercept']:.2f}"
@@ -175,39 +154,39 @@ def print_product_equations(product_equations):
         print(equation)
 
 
-
-
 def main():
     # Load and merge data
     df_merged = merge_datasets()
-    
+
     # Analyze weather codes distribution
-    analyze_weather_codes(df_merged) 
-    analyze_wind_data(df_merged) 
-    
+    analyze_weather_codes(df_merged)
+    analyze_wind_data(df_merged)
+
     # Prepare features
     df_featured = prepare_features(df_merged)
-    
+
     # Handle missing values
     df_cleaned = handle_missing_values(df_featured)
-    
+
     # Train the model and get results
-    model, product_equations, r2, rmse, product_metrics, feature_columns = prepare_and_predict_umsatz(df_cleaned)
-    
+    model, product_equations, r2, rmse, product_metrics, feature_columns = prepare_and_predict_umsatz(
+        df_cleaned)
+
     # Print overall results
     print(f"\nOverall Model Performance:")
     print(f"R-squared score: {r2:.3f}")
     print(f"Root Mean Squared Error: {rmse:.2f}")
-    
+
     # Print performance by product category
     print("\nModel Performance by Product Category:")
     for category, metrics in product_metrics.items():
         print(f"\n{category}:")
         print(f"R-squared: {metrics['R2']:.3f}")
         print(f"RMSE: {metrics['RMSE']:.2f}")
-    
+
     # Print product-specific equations
     print_product_equations(product_equations)
+
 
 if __name__ == "__main__":
     main()
