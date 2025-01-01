@@ -30,7 +30,7 @@ def create_interaction_features(df):
         col for col in df_with_interactions.columns if col.startswith('wind_')]
 
     base_features = ['Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday',
-                     'KielerWoche', 'is_nye'] + weekday_columns + month_columns + season_columns + weekend_columns + weather_category_columns + wind_category_columns
+                     'KielerWoche', 'is_nye', 'is_pre_holiday', 'is_weekend_holiday'] + weekday_columns + month_columns + season_columns + weekend_columns + weather_category_columns + wind_category_columns
 
     # Add a print statement to check features
     print("Features being used:", base_features)
@@ -96,7 +96,7 @@ def prepare_and_predict_umsatz(df):
                 'R2': product_r2, 'RMSE': product_rmse}
 
     base_features = [
-        'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye',
+        'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye', 'is_pre_holiday', 'is_weekend_holiday',
         'weekday_Monday', 'weekday_Tuesday', 'weekday_Wednesday', 'weekday_Thursday',
         'weekday_Friday', 'weekday_Saturday', 'weekday_Sunday',
         'season_Winter', 'season_Spring', 'season_Summer', 'season_Autumn',
@@ -133,7 +133,7 @@ def print_product_equations(product_equations):
     """Print the linear equation for each product in a readable format."""
     print("\nProduct-specific Linear Equations:")
     ordered_features = [
-        'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye',
+        'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye', 'is_pre_holiday', 'is_weekend_holiday',
         'weekday_Monday', 'weekday_Tuesday', 'weekday_Wednesday', 'weekday_Thursday',
         'weekday_Friday', 'weekday_Saturday', 'weekday_Sunday',
         'season_Winter', 'season_Spring', 'season_Summer', 'season_Autumn',
