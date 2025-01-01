@@ -13,16 +13,17 @@ def prepare_features(df):
     mask = (df_prepared['Wettercode'] >= 0) & (df_prepared['Wettercode'] <= 99)
     print(f"Invalid weather codes removed: {(~mask).sum()}")
     
-     # Create weather categories based on weather codes (Bewoelkung)
-    df_prepared['weather_clear'] = df_prepared['Bewoelkung'].isin(range(0, 10)).astype(int)
-    df_prepared['weather_no_precip'] = df_prepared['Bewoelkung'].isin(range(10, 20)).astype(int)
-    df_prepared['weather_dust_sand'] = df_prepared['Bewoelkung'].isin(range(30, 40)).astype(int)
-    df_prepared['weather_fog'] = df_prepared['Bewoelkung'].isin(range(40, 50)).astype(int)
-    df_prepared['weather_drizzle'] = df_prepared['Bewoelkung'].isin(range(50, 60)).astype(int)
-    df_prepared['weather_rain'] = df_prepared['Bewoelkung'].isin(range(60, 70)).astype(int)
-    df_prepared['weather_snow'] = df_prepared['Bewoelkung'].isin(range(70, 80)).astype(int)
-    df_prepared['weather_shower'] = df_prepared['Bewoelkung'].isin(range(80, 91)).astype(int)
-    df_prepared['weather_thunderstorm'] = df_prepared['Bewoelkung'].isin(range(91, 100)).astype(int)
+     # Create weather categories based on weather codes (Wettercode)
+    df_prepared['weather_clear'] = df_prepared['Wettercode'].between(0, 9, inclusive='both').astype(int)
+    df_prepared['weather_no_precip'] = df_prepared['Wettercode'].between(10, 19, inclusive='both').astype(int)
+    df_prepared['weather_past_weather'] = df_prepared['Wettercode'].between(20, 29, inclusive='both').astype(int)  # Added this category
+    df_prepared['weather_dust_sand'] = df_prepared['Wettercode'].between(30, 39, inclusive='both').astype(int)
+    df_prepared['weather_fog'] = df_prepared['Wettercode'].between(40, 49, inclusive='both').astype(int)
+    df_prepared['weather_drizzle'] = df_prepared['Wettercode'].between(50, 59, inclusive='both').astype(int)
+    df_prepared['weather_rain'] = df_prepared['Wettercode'].between(60, 69, inclusive='both').astype(int)
+    df_prepared['weather_snow'] = df_prepared['Wettercode'].between(70, 79, inclusive='both').astype(int)
+    df_prepared['weather_shower'] = df_prepared['Wettercode'].between(80, 90, inclusive='both').astype(int)
+    df_prepared['weather_thunderstorm'] = df_prepared['Wettercode'].between(91, 99, inclusive='both').astype(int)
     
      # Print distribution of weather categories
     print("\nWeather category distribution:")
@@ -30,6 +31,31 @@ def prepare_features(df):
         count = df_prepared[col].sum()
         pct = (count / len(df_prepared)) * 100
         print(f"{col}: {count} occurrences ({pct:.2f}%)")
+        
+    df_prepared['wind_calm'] = (df_prepared['Windgeschwindigkeit'] < 5).astype(int)
+    df_prepared['wind_moderate'] = ((df_prepared['Windgeschwindigkeit'] >= 5) & 
+                                  (df_prepared['Windgeschwindigkeit'] < 15)).astype(int)
+    df_prepared['wind_strong'] = (df_prepared['Windgeschwindigkeit'] >= 15).astype(int)
+    
+    """ df_prepared['weather_ideal'] = df_prepared['Wettercode'].isin([0, 1, 2, 3]).astype(int)  # Perfect shopping weather, clear/stable conditions
+
+    df_prepared['weather_uncomfortable'] = df_prepared['Wettercode'].isin([4, 5, 6, 7, 8, 9]).astype(int)  # Conditions that make shopping less pleasant (dust, smoke, haze)
+
+    df_prepared['weather_light_rain'] = df_prepared['Wettercode'].isin([50, 51, 52, 60, 61, 62]).astype(int)  # Light rain/drizzle that might affect walking customers
+
+    df_prepared['weather_heavy_rain'] = df_prepared['Wettercode'].isin([63, 64, 65, 81, 82]).astype(int)  # Heavy rain likely to reduce shopping
+
+    df_prepared['weather_visibility_poor'] = df_prepared['Wettercode'].isin(range(40, 50)).astype(int)  # Fog and visibility issues
+
+    df_prepared['weather_severe'] = df_prepared['Wettercode'].isin([91, 92, 93, 94, 95, 96, 97, 98, 99]).astype(int)  # Thunderstorms and severe conditions
+
+    df_prepared['weather_recent_rain'] = df_prepared['Wettercode'].isin([20, 21, 25]).astype(int)  # Recent rain that might still affect shopping behavior  
+
+    df_prepared['weather_snow_related'] = df_prepared['Wettercode'].isin(range(70, 80)).astype(int)  # Snow and related conditions that might limit mobility
+
+    df_prepared['weather_humid_muggy'] = df_prepared['Wettercode'].isin([10, 11, 12]).astype(int)  # Humid/muggy conditions that might affect comfort
+
+    df_prepared['weather_wind_issues'] = df_prepared['Wettercode'].isin([18, 30, 31, 32, 33, 34, 35]).astype(int)  # Wind-related conditions that might deter shoppers """
     
     # Create weekday name and dummies
     df_prepared['Wochentag'] = df_prepared['Datum'].dt.day_name()
@@ -145,7 +171,8 @@ def merge_datasets():
     #print(df.head())
     
     # Filter data to only include dates within the turnover date range
-    df = df[(df['Datum'] >= start_date) & (df['Datum'] <= end_date)]
+    # not needed if doing left joins
+    # df = df[(df['Datum'] >= start_date) & (df['Datum'] <= end_date)]
     
     df.to_csv("data/merged_data.csv", index=False)
     
@@ -154,4 +181,32 @@ def merge_datasets():
     # later anyways if the data didnt exist. 
     
     return df
+
+
+def analyze_weather_codes(df):
+    print("Weather code distribution:")
+    print(df['Wettercode'].value_counts().sort_index())
+    print("\nMissing values:", df['Wettercode'].isnull().sum())
+    print("\nUnique codes:", len(df['Wettercode'].unique()))
+    
+def analyze_wind_data(df):
+    print("\nWind Speed Analysis:")
+    print("\nBasic Statistics:")
+    print(df['Windgeschwindigkeit'].describe())
+    
+    print("\nValue Distribution:")
+    wind_dist = df['Windgeschwindigkeit'].value_counts().sort_index()
+    print(wind_dist)
+    
+    print("\nDistribution by Categories:")
+    calm = (df['Windgeschwindigkeit'] < 5).sum()
+    moderate = ((df['Windgeschwindigkeit'] >= 5) & (df['Windgeschwindigkeit'] < 15)).sum()
+    strong = (df['Windgeschwindigkeit'] >= 15).sum()
+    
+    total = len(df)
+    print(f"Calm Wind (<5): {calm} occurrences ({(calm/total*100):.2f}%)")
+    print(f"Moderate Wind (5-15): {moderate} occurrences ({(moderate/total*100):.2f}%)")
+    print(f"Strong Wind (>=15): {strong} occurrences ({(strong/total*100):.2f}%)")
+    
+    print("\nMissing values:", df['Windgeschwindigkeit'].isnull().sum())
 

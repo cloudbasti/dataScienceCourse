@@ -9,12 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.train_split import split_train_validation
 from data.data_prep import prepare_features, merge_datasets, handle_missing_values
-
-def analyze_weather_codes(df):
-    print("Weather code distribution:")
-    print(df['Wettercode'].value_counts().sort_index())
-    print("\nMissing values:", df['Wettercode'].isnull().sum())
-    print("\nUnique codes:", len(df['Wettercode'].unique()))
+from data.data_prep import analyze_weather_codes, analyze_wind_data
 
 
 def create_interaction_features(df):
@@ -24,9 +19,10 @@ def create_interaction_features(df):
     season_columns = [col for col in df_with_interactions.columns if col.startswith('season_')]
     weekend_columns = [col for col in df_with_interactions.columns if col.startswith('is_Weekend') or col.startswith('is_Weekday')]
     weather_category_columns = [col for col in df_with_interactions.columns if col.startswith('weather_')]
+    wind_category_columns = [col for col in df_with_interactions.columns if col.startswith('wind_')]
     
     base_features = ['Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 
-                    'KielerWoche'] + weekday_columns + season_columns + weekend_columns + weather_category_columns
+                    'KielerWoche'] + weekday_columns + season_columns + weekend_columns + weather_category_columns + wind_category_columns
     
     # Add a print statement to check features
     print("Features being used:", base_features)
@@ -92,8 +88,11 @@ def prepare_and_predict_umsatz(df):
         'season_Autumn', 'season_Spring', 'season_Summer', 'season_Winter',
         'is_Weekday', 'is_Weekend', 'weather_clear', 'weather_no_precip', 'weather_dust_sand', 'weather_fog',
         'weather_drizzle', 'weather_rain', 'weather_snow', 'weather_shower',
-        'weather_thunderstorm'
+        'weather_thunderstorm', 'wind_calm', 'wind_moderate', 'wind_strong'
     ]
+    
+    
+
     
     product_equations = {}
     scale_factor = scaler.scale_[0]  # Scale factor for Umsatz
@@ -129,7 +128,7 @@ def print_product_equations(product_equations):
         'season_Winter', 'season_Spring', 'season_Summer', 'season_Autumn',
         'is_Weekend', 'is_Weekday', 'weather_clear', 'weather_no_precip', 'weather_dust_sand', 'weather_fog',
         'weather_drizzle', 'weather_rain', 'weather_snow', 'weather_shower',
-        'weather_thunderstorm'
+        'weather_thunderstorm', 'wind_calm', 'wind_moderate', 'wind_strong'
     ]
     
     for product_id, eq in product_equations.items():
@@ -151,6 +150,7 @@ def main():
     
     # Analyze weather codes distribution
     analyze_weather_codes(df_merged) 
+    analyze_wind_data(df_merged) 
     
     # Prepare features
     df_featured = prepare_features(df_merged)
