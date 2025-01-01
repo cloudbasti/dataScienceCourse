@@ -9,8 +9,12 @@ DATENERGÄNZUNG
 
 MEHR FEATURES, basierend auch auf neuen Daten
 
+
+1. Wettercode
+2. Windgeschwindigkeit
 3. Schulferien 4. Feiertage (Schulferien und sowieso Feiertag?)
-5. Wettercode
+
+
 
 DATENOPTIMIERUNG UND ERGÄNZUNG 
 7. alle Eure Modellvariablen auf die Existenz von fehlenden und unplausiblen Werten hin untersuchen 

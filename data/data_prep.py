@@ -8,6 +8,29 @@ def prepare_features(df):
     # Convert date
     df_prepared['Datum'] = pd.to_datetime(df_prepared['Datum'])
     
+     # Clean weather codes
+    df_prepared['Wettercode'] = pd.to_numeric(df_prepared['Wettercode'], errors='coerce')
+    mask = (df_prepared['Wettercode'] >= 0) & (df_prepared['Wettercode'] <= 99)
+    print(f"Invalid weather codes removed: {(~mask).sum()}")
+    
+     # Create weather categories based on weather codes (Bewoelkung)
+    df_prepared['weather_clear'] = df_prepared['Bewoelkung'].isin(range(0, 10)).astype(int)
+    df_prepared['weather_no_precip'] = df_prepared['Bewoelkung'].isin(range(10, 20)).astype(int)
+    df_prepared['weather_dust_sand'] = df_prepared['Bewoelkung'].isin(range(30, 40)).astype(int)
+    df_prepared['weather_fog'] = df_prepared['Bewoelkung'].isin(range(40, 50)).astype(int)
+    df_prepared['weather_drizzle'] = df_prepared['Bewoelkung'].isin(range(50, 60)).astype(int)
+    df_prepared['weather_rain'] = df_prepared['Bewoelkung'].isin(range(60, 70)).astype(int)
+    df_prepared['weather_snow'] = df_prepared['Bewoelkung'].isin(range(70, 80)).astype(int)
+    df_prepared['weather_shower'] = df_prepared['Bewoelkung'].isin(range(80, 91)).astype(int)
+    df_prepared['weather_thunderstorm'] = df_prepared['Bewoelkung'].isin(range(91, 100)).astype(int)
+    
+     # Print distribution of weather categories
+    print("\nWeather category distribution:")
+    for col in df_prepared.filter(like='weather_').columns:
+        count = df_prepared[col].sum()
+        pct = (count / len(df_prepared)) * 100
+        print(f"{col}: {count} occurrences ({pct:.2f}%)")
+    
     # Create weekday name and dummies
     df_prepared['Wochentag'] = df_prepared['Datum'].dt.day_name()
     weekday_dummies = pd.get_dummies(df_prepared['Wochentag'], prefix='weekday')
@@ -96,7 +119,7 @@ def merge_datasets():
     turnover['Datum'] = pd.to_datetime(turnover['Datum'])
     kiwo['Datum'] = pd.to_datetime(kiwo['Datum'])
     school_holidays['Datum'] =  pd.to_datetime(school_holidays['Datum'])
-    public_holidays['Datum'] =  pd.to_datetime(school_holidays['Datum'])
+    public_holidays['Datum'] =  pd.to_datetime(public_holidays['Datum'])
     
     # Find start and end dates from turnover data
     start_date = turnover['Datum'].min()
@@ -105,14 +128,13 @@ def merge_datasets():
     print(f"Turnover data ranges from {start_date} to {end_date}")
     
     # Merge weather and turnover first
-    df = pd.merge(weather, turnover, on='Datum', how='outer')
+    df = pd.merge(turnover, weather, on='Datum', how='left')
     
     # Merge with Kieler Woche data
-    df = pd.merge(df, kiwo, on='Datum', how='outer')
+    df = pd.merge(df, kiwo, on='Datum', how='left')
     
-    df = pd.merge(df, school_holidays, on='Datum', how='outer')
-    
-    df = pd.merge(df, public_holidays, on='Datum', how='outer')
+    df = pd.merge(df, school_holidays, on='Datum', how='left')
+    df = pd.merge(df, public_holidays, on='Datum', how='left')
     
     
     # Fill NaN values in KielerWoche column with 0
@@ -124,6 +146,8 @@ def merge_datasets():
     
     # Filter data to only include dates within the turnover date range
     df = df[(df['Datum'] >= start_date) & (df['Datum'] <= end_date)]
+    
+    df.to_csv("data/merged_data.csv", index=False)
     
     # here are all rows removed from the final merged dataframe for which no turnover data
     # was available from the very beginning. Its not necessary to handle missing values for this 
