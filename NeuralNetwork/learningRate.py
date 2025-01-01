@@ -8,13 +8,10 @@ from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.regularizers import l2
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt 
-
+import matplotlib.pyplot as plt
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.train_split import split_train_validation
@@ -56,7 +53,6 @@ def create_product_features(df):
     
     all_features = []
     
-    # Temperature polynomials
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
     temp_features = temp_poly.fit_transform(df_with_features[['Temperatur']])
     feature_names = ['Temp', 'Temp2', 'Temp3']
@@ -65,7 +61,6 @@ def create_product_features(df):
         df_with_features[name] = temp_features[:, i]
         all_features.append(name)
     
-    # Weather interactions
     df_with_features['Temp_Cloud'] = df_with_features['Temperatur'] * df_with_features['Bewoelkung']
     all_features.append('Temp_Cloud')
     
@@ -75,37 +70,31 @@ def create_product_features(df):
     all_features.extend(weather_codes)
     all_features.extend(wind_features)
     
-    # Product-specific features
     for product_id in range(1, 7):
         product_col = f'is_product_{product_id}'
         df_with_features[product_col] = (df_with_features['Warengruppe'] == product_id).astype(int)
         all_features.append(product_col)
         
-        # Weather effects
         for weather in weather_features:
             col_name = f'{weather}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * df_with_features[weather]
             all_features.append(col_name)
             
-        # Weather code effects    
         for weather_code in weather_codes:
             col_name = f'{weather_code}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * df_with_features[weather_code]
             all_features.append(col_name)
             
-        # Wind effects
         for wind in wind_features:
             col_name = f'{wind}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * df_with_features[wind]
             all_features.append(col_name)
         
-        # Time effects
         for time in time_features:
             col_name = f'{time}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * df_with_features[time]
             all_features.append(col_name)
         
-        # Event effects
         for event in event_features:
             col_name = f'{event}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * df_with_features[event]
@@ -138,12 +127,11 @@ def plot_history(history):
     plt.savefig('training_history.png')
     plt.close()
 
-def prepare_and_predict_umsatz_nn(df):
+def prepare_and_predict_umsatz_nn(df, learning_rate=0.001):
     """
-    Neural network model for predicting turnover with product interactions and polynomial features
+    Neural network model for predicting turnover with product interactions
     """
     df_with_features, feature_columns = create_product_features(df)
-    
     X_train, X_test, y_train, y_test = split_train_validation(df_with_features, feature_columns)
     
     scaler_X = StandardScaler()
@@ -154,36 +142,22 @@ def prepare_and_predict_umsatz_nn(df):
     y_train_scaled = scaler_y.fit_transform(y_train.values.reshape(-1, 1)).ravel()
     y_test_scaled = scaler_y.transform(y_test.values.reshape(-1, 1)).ravel()
     
-    """ model = Sequential([
-        Dense(256, activation='relu', input_shape=(len(feature_columns),)),
-        BatchNormalization(),
-        Dropout(0.3),
-        Dense(128, activation='relu'),
-        Dropout(0.2),
-        Dense(64, activation='relu'),
-        Dropout(0.1),
-        Dense(32, activation='relu'),
-        Dense(1)
-    ]) """
-    
     model = Sequential([
-    Dense(128, activation='relu', input_shape=(len(feature_columns),), kernel_regularizer=l2(0.01)),  # Reduced from 256 to 128
-    BatchNormalization(),
-    Dropout(0.42),
-    Dense(64, activation='relu', kernel_regularizer=l2(0.01)),  # Reduced from 128 to 64
-    Dropout(0.3),
-    Dense(32, activation='relu', kernel_regularizer=l2(0.01)),  # Reduced from 64 to 32
-    Dropout(0.12),
-    Dense(1)  # Output layer remains the same
+        Dense(128, activation='relu', input_shape=(len(feature_columns),), kernel_regularizer=l2(0.01)),
+        BatchNormalization(),
+        Dropout(0.42),
+        Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
+        Dropout(0.3),
+        Dense(32, activation='relu', kernel_regularizer=l2(0.01)),
+        Dropout(0.12),
+        Dense(1)
     ])
     
-    model.compile(optimizer=Adam(learning_rate=0.000085),
+    model.compile(optimizer=Adam(learning_rate=learning_rate),
                  loss='mse',
                  metrics=['mae'])
     
-    # Using the new callbacks
     callbacks = create_callbacks()
-    
     history = model.fit(X_train_scaled, y_train_scaled,
                        epochs=50,
                        batch_size=32,
@@ -206,30 +180,87 @@ def prepare_and_predict_umsatz_nn(df):
             product_rmse = np.sqrt(mean_squared_error(y_test_unscaled[mask], y_pred[mask]))
             product_metrics[f"Product {product_id}"] = {'R2': product_r2, 'RMSE': product_rmse}
     
-    return model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns
+    tf.keras.backend.clear_session()
+    return model, r2, rmse, product_metrics, history
+
+def plot_learning_rate_results(results_df):
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
+    
+    ax1.semilogx(results_df['learning_rate'], results_df['r2_score'])
+    ax1.set_xlabel('Learning Rate')
+    ax1.set_ylabel('R² Score')
+    ax1.set_title('R² Score vs Learning Rate')
+    ax1.grid(True)
+    
+    ax2.semilogx(results_df['learning_rate'], results_df['rmse'])
+    ax2.set_xlabel('Learning Rate')
+    ax2.set_ylabel('RMSE')
+    ax2.set_title('RMSE vs Learning Rate')
+    ax2.grid(True)
+    
+    ax3.semilogx(results_df['learning_rate'], results_df['min_val_loss'])
+    ax3.set_xlabel('Learning Rate')
+    ax3.set_ylabel('Minimum Validation Loss')
+    ax3.set_title('Min Validation Loss vs Learning Rate')
+    ax3.grid(True)
+    
+    product_columns = [col for col in results_df.columns if 'Product_' in col and '_r2' in col]
+    for col in product_columns:
+        ax4.semilogx(results_df['learning_rate'], results_df[col], 
+                    label=col.replace('_r2', ''))
+    ax4.set_xlabel('Learning Rate')
+    ax4.set_ylabel('R² Score')
+    ax4.set_title('Product-specific R² Scores vs Learning Rate')
+    ax4.legend()
+    ax4.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig('learning_rate_analysis.png')
+    plt.close()
 
 def main():
-    # Load and merge data
     df_merged = merge_datasets()
     df_featured = prepare_features(df_merged)
     df_cleaned = handle_missing_values(df_featured)
     
-    # Train model
-    model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns = prepare_and_predict_umsatz_nn(df_cleaned)
+    min_lr = 0.00001
+    max_lr = 0.01
+    num_steps = 30
+    learning_rates = np.logspace(np.log10(min_lr), np.log10(max_lr), num_steps)
     
-    # Print results
-    print(f"\nNeural Network Overall Performance:")
-    print(f"R-squared score: {r2:.3f}")
-    print(f"Root Mean Squared Error: {rmse:.2f}")
+    results = []
+    for lr in learning_rates:
+        print(f"\nTraining with learning rate: {lr:.6f}")
+        model, r2, rmse, product_metrics, history = prepare_and_predict_umsatz_nn(df_cleaned, lr)
+        
+        result = {
+            'learning_rate': lr,
+            'r2_score': r2,
+            'rmse': rmse,
+            'final_loss': history.history['loss'][-1],
+            'final_val_loss': history.history['val_loss'][-1],
+            'epochs_trained': len(history.history['loss']),
+            'min_val_loss': min(history.history['val_loss'])
+        }
+        
+        for product, metrics in product_metrics.items():
+            result[f"{product}_r2"] = metrics['R2']
+            result[f"{product}_rmse"] = metrics['RMSE']
+            
+        results.append(result)
+        
+        # Save intermediate results after each iteration
+        pd.DataFrame(results).to_csv('learning_rate_analysis_intermediate.csv', index=False)
     
-    print("\nNeural Network Performance by Product Category:")
-    for category, metrics in product_metrics.items():
-        print(f"\n{category}:")
-        print(f"R-squared: {metrics['R2']:.3f}")
-        print(f"RMSE: {metrics['RMSE']:.2f}")
+    results_df = pd.DataFrame(results)
+    results_df.to_csv('learning_rate_analysis_final.csv', index=False)
     
-    # Plot training history
-    plot_history(history)
+    plot_learning_rate_results(results_df)
+    
+    best_lr_idx = results_df['r2_score'].idxmax()
+    best_lr = results_df.loc[best_lr_idx, 'learning_rate']
+    print(f"\nBest learning rate found: {best_lr:.6f}")
+    print(f"Best R² score: {results_df.loc[best_lr_idx, 'r2_score']:.3f}")
 
 if __name__ == "__main__":
     main()
