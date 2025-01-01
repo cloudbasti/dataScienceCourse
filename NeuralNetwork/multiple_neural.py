@@ -85,7 +85,14 @@ def create_product_features(df):
     
     # Base features grouped by type
     weather_features = ['Temperatur', 'Bewoelkung']
-    time_features = ['Wochentag_encoded', 'is_weekend']
+    
+    # Get all dummy columns
+    weekday_dummies = [col for col in df.columns if col.startswith('weekday_')]
+    month_dummies = [col for col in df.columns if col.startswith('month_')]
+    season_dummies = [col for col in df.columns if col.startswith('season_')]
+    
+    # Combine time features
+    time_features = weekday_dummies + month_dummies + season_dummies
     event_features = ['is_holiday', 'is_school_holiday', 'KielerWoche']
     
     all_features = []
@@ -102,6 +109,11 @@ def create_product_features(df):
     # 2. Create weather interactions
     df_with_features['Temp_Cloud'] = df_with_features['Temperatur'] * df_with_features['Bewoelkung']
     all_features.append('Temp_Cloud')
+    
+    # Add all dummy variables to features list
+    all_features.extend(weekday_dummies)
+    all_features.extend(month_dummies)
+    all_features.extend(season_dummies)
     
     # 3. Create product-specific features
     for product_id in range(1, 7):
@@ -197,7 +209,7 @@ def prepare_and_predict_umsatz_nn(df):
 def main():
     # Load and prepare data
     df_merged = merge_datasets()
-    df_featured, weekday_encoder = prepare_features(df_merged)
+    df_featured = prepare_features(df_merged)
     df_cleaned = handle_missing_values(df_featured)
     
     # Train neural network

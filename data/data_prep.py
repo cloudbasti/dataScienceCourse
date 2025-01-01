@@ -3,7 +3,6 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
 def prepare_features(df):
-    # Create a copy to avoid modifying the original
     df_prepared = df.copy()
     
     # Convert date
@@ -14,8 +13,10 @@ def prepare_features(df):
     weekday_dummies = pd.get_dummies(df_prepared['Wochentag'], prefix='weekday')
     df_prepared = pd.concat([df_prepared, weekday_dummies], axis=1)
     
-    # Add is_weekend feature
-    df_prepared['is_weekend'] = df_prepared['Datum'].dt.dayofweek.isin([5, 6]).astype(int)
+    # Add is_weekend feature and dummies
+    df_prepared['is_weekend'] = df_prepared['Datum'].dt.dayofweek.isin([5, 6]).map({True: 'Weekend', False: 'Weekday'})
+    weekend_dummies = pd.get_dummies(df_prepared['is_weekend'], prefix='is')
+    df_prepared = pd.concat([df_prepared, weekend_dummies], axis=1)
     
     # Create month dummy variables
     df_prepared['month'] = df_prepared['Datum'].dt.month
@@ -23,7 +24,6 @@ def prepare_features(df):
     df_prepared = pd.concat([df_prepared, month_dummies], axis=1)
     
     # Create season feature and dummies
-    # Fix: Use a different approach for seasons to avoid duplicate labels
     df_prepared['season'] = df_prepared['month'].map({
         12: 'Winter', 1: 'Winter', 2: 'Winter',
         3: 'Spring', 4: 'Spring', 5: 'Spring',

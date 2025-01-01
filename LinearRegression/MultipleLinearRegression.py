@@ -1,137 +1,153 @@
 import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score, mean_squared_error
 import numpy as np
-
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import r2_score, mean_squared_error
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.train_split import split_train_validation
-from data.data_prep import prepare_features
-from data.data_prep import merge_datasets
-from data.data_prep import handle_missing_values
+from data.data_prep import prepare_features, merge_datasets, handle_missing_values
 
 def create_interaction_features(df):
-    """
-    Create interaction terms between products and features.
-    This is specific to linear regression modeling.
-    """
     df_with_interactions = df.copy()
     
-    # Get all weekday and season dummy columns
     weekday_columns = [col for col in df_with_interactions.columns if col.startswith('weekday_')]
     season_columns = [col for col in df_with_interactions.columns if col.startswith('season_')]
+    weekend_columns = [col for col in df_with_interactions.columns if col.startswith('is_Weekend') or col.startswith('is_Weekday')]
     
     base_features = ['Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 
-                    'KielerWoche', 'is_weekend'] + weekday_columns + season_columns
+                    'KielerWoche'] + weekday_columns + season_columns + weekend_columns
     
-    product_features = []
-    interaction_features = []
+    # Add a print statement to check features
+    print("Features being used:", base_features)
     
-    # Create product indicators first
-    for product_id in range(1, 7):
+    product_dummies = pd.get_dummies(df_with_interactions['Warengruppe'], prefix='is_product')
+    product_features = list(product_dummies.columns)
+    
+    new_columns = {}
+    for col in product_features:
+        new_columns[col] = product_dummies[col]
+    
+    for product_id in df_with_interactions['Warengruppe'].unique():
         product_col = f'is_product_{product_id}'
-        df_with_interactions[product_col] = (df_with_interactions['Warengruppe'] == product_id).astype(int)
-        product_features.append(product_col)
-        
-        # Create interaction terms
         for feature in base_features:
             interaction_col = f'int_{feature}_p{product_id}'
-            df_with_interactions[interaction_col] = df_with_interactions[product_col] * df_with_interactions[feature]
-            interaction_features.append(interaction_col)
+            new_columns[interaction_col] = product_dummies[product_col] * df_with_interactions[feature]
     
-    all_features = product_features + interaction_features
-    return df_with_interactions[['Datum'] + all_features + ['Umsatz']], all_features
+    interactions_df = pd.DataFrame(new_columns)
+    result_df = pd.concat([
+        df_with_interactions[['Datum', 'Umsatz', 'Warengruppe']], 
+        interactions_df
+    ], axis=1)
+    
+    all_features = product_features + [col for col in interactions_df.columns if col.startswith('int_')]
+    return result_df, all_features
+
+
+
 
 def prepare_and_predict_umsatz(df):
-    """
-    Main function that creates a single model with product-specific equations.
-    """
-    # Add interaction terms for linear regression
-    df_with_interactions, feature_columns = create_interaction_features(df)
+    # Scale only Umsatz
+    scaler = StandardScaler()
+    df_scaled = df.copy()
+    df_scaled['Umsatz'] = scaler.fit_transform(df['Umsatz'].values.reshape(-1, 1))
     
-    # Split data
+    df_with_interactions, feature_columns = create_interaction_features(df_scaled)
     X_train, X_test, y_train, y_test = split_train_validation(df_with_interactions, feature_columns)
     
-    # Create and fit the model
     model = LinearRegression()
     model.fit(X_train, y_train)
-    
-    # Make predictions
     y_pred = model.predict(X_test)
     
-    # Calculate overall metrics
-    r2 = r2_score(y_test, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    # Inverse transform predictions
+    y_test_orig = scaler.inverse_transform(y_test.values.reshape(-1, 1))[:, 0]
+    y_pred_orig = scaler.inverse_transform(y_pred.reshape(-1, 1))[:, 0]
     
-    # Calculate metrics per product category
+    r2 = r2_score(y_test_orig, y_pred_orig)
+    rmse = np.sqrt(mean_squared_error(y_test_orig, y_pred_orig))
+    
     product_metrics = {}
-    for product_id in range(1, 7):
+    unique_products = sorted(df_with_interactions['Warengruppe'].unique())
+    for product_id in unique_products:
         mask = X_test[f'is_product_{product_id}'] == 1
         if mask.any():
-            product_r2 = r2_score(y_test[mask], y_pred[mask])
-            product_rmse = np.sqrt(mean_squared_error(y_test[mask], y_pred[mask]))
+            product_r2 = r2_score(y_test_orig[mask], y_pred_orig[mask])
+            product_rmse = np.sqrt(mean_squared_error(y_test_orig[mask], y_pred_orig[mask]))
             product_metrics[f"Product {product_id}"] = {'R2': product_r2, 'RMSE': product_rmse}
     
-    # Extract coefficients for each product
+    base_features = [
+        'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche',
+        'weekday_Friday', 'weekday_Monday', 'weekday_Saturday', 'weekday_Sunday',
+        'weekday_Thursday', 'weekday_Tuesday', 'weekday_Wednesday',
+        'season_Autumn', 'season_Spring', 'season_Summer', 'season_Winter',
+        'is_Weekday', 'is_Weekend'
+    ]
+    
     product_equations = {}
-    weekday_columns = [col for col in df_with_interactions.columns if col.startswith('weekday_')]
-    season_columns = [col for col in df_with_interactions.columns if col.startswith('season_')]
+    scale_factor = scaler.scale_[0]  # Scale factor for Umsatz
+    mean_umsatz = scaler.mean_[0]    # Mean of Umsatz
     
-    base_features = ['Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 
-                    'KielerWoche', 'is_weekend'] + weekday_columns + season_columns
-    
-    for product_id in range(1, 7):
-        # Get product indicator coefficient
-        intercept = model.intercept_
-        product_coef = model.coef_[feature_columns.index(f'is_product_{product_id}')]
-        
-        # Get interaction coefficients
+    for product_id in unique_products:
         feature_coefs = {}
+        idx = feature_columns.index(f'is_product_{product_id}')
+        product_coef = model.coef_[idx] * scale_factor
+        
         for feature in base_features:
             interaction_col = f'int_{feature}_p{product_id}'
-            coef = model.coef_[feature_columns.index(interaction_col)]
+            coef = model.coef_[feature_columns.index(interaction_col)] * scale_factor
             feature_coefs[feature] = coef
         
         product_equations[product_id] = {
-            'intercept': intercept + product_coef,
+            'intercept': model.intercept_ * scale_factor + mean_umsatz,
             'coefficients': feature_coefs
         }
     
     return model, product_equations, r2, rmse, product_metrics, feature_columns
 
+
+
+
 def print_product_equations(product_equations):
-    """
-    Print the linear equation for each product in a readable format.
-    """
+    """Print the linear equation for each product in a readable format."""
     print("\nProduct-specific Linear Equations:")
+    ordered_features = [
+        'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche',
+        'weekday_Monday', 'weekday_Tuesday', 'weekday_Wednesday', 'weekday_Thursday',  
+        'weekday_Friday', 'weekday_Saturday', 'weekday_Sunday',
+        'season_Winter', 'season_Spring', 'season_Summer', 'season_Autumn',
+        'is_Weekend', 'is_Weekday'
+    ]
+    
     for product_id, eq in product_equations.items():
         print(f"\nProduct {product_id}:")
         equation = f"Umsatz = {eq['intercept']:.2f}"
-        for feature, coef in eq['coefficients'].items():
-            sign = '+' if coef >= 0 else '-'
-            equation += f" {sign} {abs(coef):.2f}*{feature}"
+        for feature in ordered_features:
+            if feature in eq['coefficients']:
+                coef = eq['coefficients'][feature]
+                sign = '+' if coef >= 0 else '-'
+                equation += f" {sign} {abs(coef):.2f}*{feature}"
         print(equation)
+
+
+
 
 def main():
     # Load and merge data
     df_merged = merge_datasets()
     
-    # Prepare features (now includes weekday dummies)
+    # Prepare features
     df_featured = prepare_features(df_merged)
     
     # Handle missing values
     df_cleaned = handle_missing_values(df_featured)
     
-    # Get list of season dummy columns from the cleaned data
-    season_columns = [col for col in df_cleaned.columns if col.startswith('season_')]
-    
-    # Train the model
+    # Train the model and get results
     model, product_equations, r2, rmse, product_metrics, feature_columns = prepare_and_predict_umsatz(df_cleaned)
     
     # Print overall results
-    print("\nOverall Model Performance:")
+    print(f"\nOverall Model Performance:")
     print(f"R-squared score: {r2:.3f}")
     print(f"Root Mean Squared Error: {rmse:.2f}")
     
@@ -144,8 +160,6 @@ def main():
     
     # Print product-specific equations
     print_product_equations(product_equations)
-    
-    
 
 if __name__ == "__main__":
     main()
