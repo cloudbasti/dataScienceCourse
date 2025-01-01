@@ -21,6 +21,24 @@ from data.data_prep import prepare_features
 from data.data_prep import merge_datasets
 from data.data_prep import handle_missing_values
 
+def create_callbacks():
+    early_stopping = EarlyStopping(
+        monitor='val_loss',
+        patience=50,
+        restore_best_weights=True,
+        verbose=1
+    )
+    
+    reduce_lr = ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.5,
+        patience=50,
+        min_lr=0.00001,
+        verbose=1
+    )
+    
+    return [early_stopping, reduce_lr]
+
 def create_product_features(df):
     df_with_features = df.copy()
     
@@ -147,14 +165,18 @@ def prepare_and_predict_umsatz_nn(df):
         Dense(1)
     ])
     
-    model.compile(optimizer=Adam(learning_rate=0.01),
+    model.compile(optimizer=Adam(learning_rate=0.001),
                  loss='mse',
                  metrics=['mae'])
+    
+    # Using the new callbacks
+    callbacks = create_callbacks()
     
     history = model.fit(X_train_scaled, y_train_scaled,
                        epochs=50,
                        batch_size=32,
                        validation_split=0.2,
+                       callbacks=callbacks,
                        verbose=1)
     
     y_pred_scaled = model.predict(X_test_scaled)
