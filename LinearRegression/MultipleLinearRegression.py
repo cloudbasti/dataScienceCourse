@@ -92,8 +92,6 @@ def prepare_and_predict_umsatz(df):
     ]
     
     
-
-    
     product_equations = {}
     scale_factor = scaler.scale_[0]  # Scale factor for Umsatz
     mean_umsatz = scaler.mean_[0]    # Mean of Umsatz

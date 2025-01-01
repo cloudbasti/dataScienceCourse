@@ -155,9 +155,9 @@ def prepare_and_predict_umsatz_nn(df):
     
     model = Sequential([
         Dense(256, activation='relu', input_shape=(len(feature_columns),)),
+        BatchNormalization(),
         Dropout(0.3),
         Dense(128, activation='relu'),
-        BatchNormalization(),
         Dropout(0.2),
         Dense(64, activation='relu'),
         Dropout(0.1),
@@ -173,7 +173,7 @@ def prepare_and_predict_umsatz_nn(df):
     callbacks = create_callbacks()
     
     history = model.fit(X_train_scaled, y_train_scaled,
-                       epochs=50,
+                       epochs=20,
                        batch_size=32,
                        validation_split=0.2,
                        callbacks=callbacks,
