@@ -13,6 +13,8 @@ def prepare_features(df):
     mask = (df_prepared['Wettercode'] >= 0) & (df_prepared['Wettercode'] <= 99)
     print(f"Invalid weather codes removed: {(~mask).sum()}")
     
+    # for the weather also the most frequent ones might need to get their own features. 
+    
      # Create weather categories based on weather codes (Wettercode)
     df_prepared['weather_clear'] = df_prepared['Wettercode'].between(0, 9, inclusive='both').astype(int)
     df_prepared['weather_no_precip'] = df_prepared['Wettercode'].between(10, 19, inclusive='both').astype(int)
@@ -32,10 +34,22 @@ def prepare_features(df):
         pct = (count / len(df_prepared)) * 100
         print(f"{col}: {count} occurrences ({pct:.2f}%)")
         
+    # for the wind the analysis many data is in moderate wind, so this might also be split to 
+    # a finer accuracy    
     df_prepared['wind_calm'] = (df_prepared['Windgeschwindigkeit'] < 5).astype(int)
     df_prepared['wind_moderate'] = ((df_prepared['Windgeschwindigkeit'] >= 5) & 
                                   (df_prepared['Windgeschwindigkeit'] < 15)).astype(int)
     df_prepared['wind_strong'] = (df_prepared['Windgeschwindigkeit'] >= 15).astype(int)
+    
+    # New Year's Eve (highest turnover days)
+    df_prepared['is_nye'] = (df_prepared['Datum'].dt.month == 12) & (df_prepared['Datum'].dt.day == 31)
+    df_prepared['is_nye'] = df_prepared['is_nye'].fillna(0)
+
+    # Pre-holiday indicator (day before holidays)
+    # df_prepared['is_pre_holiday'] = df_prepared['Datum'].shift(-1).isin(df_prepared[df_prepared['is_holiday'] == 1]['Datum'])
+
+    # Weekend + Holiday combination
+    # df_prepared['is_weekend_holiday'] = (df_prepared['is_weekend'] == 'Weekend') & (df_prepared['is_holiday'] == 1)
     
     """ df_prepared['weather_ideal'] = df_prepared['Wettercode'].isin([0, 1, 2, 3]).astype(int)  # Perfect shopping weather, clear/stable conditions
 
@@ -99,6 +113,7 @@ def handle_missing_values(df):
     pandas.DataFrame: Dataframe with rows containing missing values removed
     """
     df_cleaned = df.copy()
+    
     
     # Define columns to check for missing values
     columns_to_check = ['Temperatur', 'Bewoelkung', 'Umsatz', 'Warengruppe']
