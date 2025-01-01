@@ -1,3 +1,6 @@
+from data.data_prep import analyze_weather_codes, analyze_wind_data
+from data.data_prep import prepare_features, merge_datasets, handle_missing_values
+from data.train_split import split_train_validation
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -7,88 +10,120 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from data.train_split import split_train_validation
-from data.data_prep import prepare_features, merge_datasets, handle_missing_values
-from data.data_prep import analyze_weather_codes, analyze_wind_data
-
 
 def create_interaction_features(df):
     df_with_interactions = df.copy()
-    
-    weekday_columns = [col for col in df_with_interactions.columns if col.startswith('weekday_')]
-    season_columns = [col for col in df_with_interactions.columns if col.startswith('season_')]
-    weekend_columns = [col for col in df_with_interactions.columns if col.startswith('is_Weekend') or col.startswith('is_Weekday')]
-    weather_category_columns = [col for col in df_with_interactions.columns if col.startswith('weather_')]
-    wind_category_columns = [col for col in df_with_interactions.columns if col.startswith('wind_')]
-    
-    base_features = ['Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 
-                    'KielerWoche', 'is_nye'] + weekday_columns + season_columns + weekend_columns + weather_category_columns + wind_category_columns
-    
+
+    weekday_columns = [
+        col for col in df_with_interactions.columns if col.startswith('weekday_')]
+    month_columns = [
+        col for col in df_with_interactions.columns if col.startswith('weekday_')]
+    season_columns = [
+        col for col in df_with_interactions.columns if col.startswith('season_')]
+    weekend_columns = [col for col in df_with_interactions.columns if col.startswith(
+        'is_Weekend') or col.startswith('is_Weekday')]
+    weather_category_columns = [
+        col for col in df_with_interactions.columns if col.startswith('weather_')]
+    wind_category_columns = [
+        col for col in df_with_interactions.columns if col.startswith('wind_')]
+
+    base_features = ['Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday',
+                    'KielerWoche', 'is_nye'] + weekday_columns + month_columns + season_columns + weekend_columns + weather_category_columns + wind_category_columns
+
     # Add a print statement to check features
     print("Features being used:", base_features)
-    
-    product_dummies = pd.get_dummies(df_with_interactions['Warengruppe'], prefix='is_product')
+
+    product_dummies = pd.get_dummies(
+        df_with_interactions['Warengruppe'], prefix='is_product')
     product_features = list(product_dummies.columns)
-    
+
     new_columns = {}
     for col in product_features:
         new_columns[col] = product_dummies[col]
-    
+
     for product_id in df_with_interactions['Warengruppe'].unique():
         product_col = f'is_product_{product_id}'
         for feature in base_features:
             interaction_col = f'int_{feature}_p{product_id}'
-            new_columns[interaction_col] = product_dummies[product_col] * df_with_interactions[feature]
-    
+            new_columns[interaction_col] = product_dummies[product_col] * \
+                df_with_interactions[feature]
+
     interactions_df = pd.DataFrame(new_columns)
     result_df = pd.concat([
-        df_with_interactions[['Datum', 'Umsatz', 'Warengruppe']], 
+        df_with_interactions[['Datum', 'Umsatz', 'Warengruppe']],
         interactions_df
     ], axis=1)
-    
-    all_features = product_features + [col for col in interactions_df.columns if col.startswith('int_')]
+
+    all_features = product_features + \
+        [col for col in interactions_df.columns if col.startswith('int_')]
     return result_df, all_features
-
-
 
 
 def prepare_and_predict_umsatz(df):
     # Scale only Umsatz
     scaler = StandardScaler()
     df_scaled = df.copy()
-    df_scaled['Umsatz'] = scaler.fit_transform(df['Umsatz'].values.reshape(-1, 1))
-    
-    df_with_interactions, feature_columns = create_interaction_features(df_scaled)
-    X_train, X_test, y_train, y_test = split_train_validation(df_with_interactions, feature_columns)
-    
+    df_scaled['Umsatz'] = scaler.fit_transform(
+        df['Umsatz'].values.reshape(-1, 1))
+
+    df_with_interactions, feature_columns = create_interaction_features(
+        df_scaled)
+    X_train, X_test, y_train, y_test = split_train_validation(
+        df_with_interactions, feature_columns)
+
     model = LinearRegression()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
-    
+
     # Inverse transform predictions
     y_test_orig = scaler.inverse_transform(y_test.values.reshape(-1, 1))[:, 0]
     y_pred_orig = scaler.inverse_transform(y_pred.reshape(-1, 1))[:, 0]
-    
+
     r2 = r2_score(y_test_orig, y_pred_orig)
     rmse = np.sqrt(mean_squared_error(y_test_orig, y_pred_orig))
-    
+
     product_metrics = {}
     unique_products = sorted(df_with_interactions['Warengruppe'].unique())
     for product_id in unique_products:
         mask = X_test[f'is_product_{product_id}'] == 1
         if mask.any():
             product_r2 = r2_score(y_test_orig[mask], y_pred_orig[mask])
-            product_rmse = np.sqrt(mean_squared_error(y_test_orig[mask], y_pred_orig[mask]))
-            product_metrics[f"Product {product_id}"] = {'R2': product_r2, 'RMSE': product_rmse}
+            product_rmse = np.sqrt(mean_squared_error(
+                y_test_orig[mask], y_pred_orig[mask]))
+            product_metrics[f"Product {product_id}"] = {
+                'R2': product_r2, 'RMSE': product_rmse}
+
+   base_features = [
+    # Existing weather and temperature features
+        'Temperatur', 'Bewoelkung', 
     
-    base_features = [
-        'Temperatur', 'Bewoelkung', 'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye',
+    # Holiday and special day features
+        'is_holiday', 'is_school_holiday', 'KielerWoche', 'is_nye',
+    
+    # Weekday features
         'weekday_Friday', 'weekday_Monday', 'weekday_Saturday', 'weekday_Sunday',
         'weekday_Thursday', 'weekday_Tuesday', 'weekday_Wednesday',
-        'season_Autumn', 'season_Spring', 'season_Summer', 'season_Winter',
-        'is_Weekday', 'is_Weekend', 'weather_clear', 'weather_no_precip', 'weather_dust_sand', 'weather_fog',
-        'weather_drizzle', 'weather_rain', 'weather_snow', 'weather_shower',
-        'weather_thunderstorm', 'wind_calm', 'wind_moderate', 'wind_strong'
+    
+    # Season features
+         'season_Autumn', 'season_Spring', 'season_Summer', 'season_Winter',
+    
+    # Weekend features
+    'is_Weekday', 'is_Weekend', 
+    
+    # Weather condition features
+    'weather_clear', 'weather_no_precip', 'weather_dust_sand', 'weather_fog',
+    'weather_drizzle', 'weather_rain', 'weather_snow', 'weather_shower',
+    'weather_thunderstorm', 
+    
+    # Wind features
+    'wind_calm', 'wind_moderate', 'wind_strong',
+    
+    # Month features (add these)
+    'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6',
+    'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12',
+    
+    # Cyclical month encoding (optional but can be helpful)
+    'month_sin', 'month_cos'
     ]
     
     
