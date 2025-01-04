@@ -1,26 +1,29 @@
 # dataScienceCourse
 
 # to do: 
+MOST IMPORTANT: 
+1. Add Bank holidays and holidays to create_bank/school_holidays 
+2. Data Imputation / vielleicht unterschiedlich für Training Set und Final Set
+3. Time Series Prediction als Features hinzufügen
 
-DATENERGÄNZUNG
-1. add Brückentage before and after holidays
+Optimierung: 
+4. Optimieren des neuronalen Netzes
+5. Training Loss / Validation Loss / MAPE
 
-MEHR FEATURES, basierend auch auf neuen Daten
+Statistiken und Analyse: 
+1. Deskriptive Statistiken für zwei Variablen
+2. what are weird values? 
+3. if a weather code is set to zero if its not existing, does this really make sense?
 
+Optional: 
+4. weitere Features hinzufügen
+5. add Brückentage before and after holidays
+
+weitere Optional
 1. Wettercode (hier nochmal die Hauptkategorien besser beschreiben)
 2. Windgeschwindigkeit (hier ebenfalls)
 3. Feiertage (Schulferien und sowieso Feiertag?)
 
-Read the Task Descriptions of the other weeks and do all tasks. 
-
-4. See if you can upload Data on Kaggle
-
-
-VERBESSERUNG NEURONALES NETZ (ein erstes Neuronales Netz optimieren)
-1. Learning Rate optimization
-2. Prevent Overfitting
-3. Batch Optimization
-4. Anzahl Neurons und Dropout Layer
 
 First try with a shallow model with few neurons. Then gradually increase the number of neurons in order to overfit the dataset. You should be able to reach perfect score on the train set. At that point you can start decrease the number of neurons and add layers with dropout to improve generalisation.
 
@@ -33,26 +36,5 @@ questions for AI:
 SOLUTIONS: 
 
 for the diagrams you need to make diagrams for the training and validation set based on the trained model. Also implement the MAPE, as in the notebooks. 
-
-
-DATA ANALYSIS AND DATA VALUES: 
-
-Outliers:
-1. analyze the data for outliers
-2. what are weird values? 
-3. if a weather code is set to zero if its not existing, does this really make sense?
-
-Missing Values
-1. Understand the data better with respect to missing values
-2. How are missing values handled for the different features? 
--- replace the values with new values --
-3. Imputation of values (just implement one strategy)
-
-
-
-Prepare test data. Merge Process ist gleich, aber nicht abschneiden. 
-danach prepare features. 
-
-missing values muss aber anders gemacht werden. 
 
 
