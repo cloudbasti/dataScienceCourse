@@ -1,9 +1,13 @@
 import pandas as pd
-# import numpy as np
+import numpy as np
 
 
-def merge_test_datasets(test_df):
+def merge_test_datasets():
     # Load all auxiliary datasets
+    test_df = pd.read_csv("data/test.csv")
+    initial_test_rows = len(test_df)
+    print(f"Initial test data rows: {test_df.shape}")
+
     weather = pd.read_csv("data/wetter.csv")
     kiwo = pd.read_csv("data/kiwo.csv")
     school_holidays = pd.read_csv("data/school_holidays.csv")
@@ -160,3 +164,41 @@ def prepare_features(df):
         0)
 
     return df_prepared
+
+
+def initialize_umsatz_column(df):
+    """Initialize Umsatz column with zeros for test data."""
+    print("\nInitializing Umsatz column for test data...")
+    df['Umsatz'] = 0  # Initialize with zeros
+    print(f"Added Umsatz column. Shape after adding: {df.shape}")
+    return df
+
+
+def main():
+    # First merge the datasets
+    print("Merging datasets...")
+    merged_df = merge_test_datasets()
+    initial_rows = len(merged_df)
+    print(f"Merged data shape: {merged_df.shape}")
+
+    # Initialize Umsatz column
+    merged_df = initialize_umsatz_column(merged_df)
+
+    # Then prepare all features
+    print("\nPreparing features...")
+    prepared_df = prepare_features(merged_df)
+    final_rows = len(prepared_df)
+    print(f"Prepared data shape: {prepared_df.shape}")
+
+    if initial_rows != final_rows:
+        raise ValueError(f"Row count changed! Started with {
+                         initial_rows}, ended with {final_rows}")
+
+    # Save the final prepared dataset
+    output_path = "data/prepared_test_data.csv"
+    prepared_df.to_csv(output_path, index=False)
+    print(f"\nSaved prepared test data to: {output_path}")
+
+
+if __name__ == "__main__":
+    main()
