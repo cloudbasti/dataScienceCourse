@@ -7,6 +7,8 @@ MOST IMPORTANT:
 3. Time Series Prediction als Features hinzufügen
 
 Optimierung: 
+3. nochmal über die Interaction Features nachdenken und eventuell umsortieren
+4. Cyclical month versuchen
 4. Optimieren des neuronalen Netzes
 5. Training Loss / Validation Loss / MAPE
 
