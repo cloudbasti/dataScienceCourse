@@ -49,3 +49,10 @@ Missing Values
 3. Imputation of values (just implement one strategy)
 
 
+
+Prepare test data. Merge Process ist gleich, aber nicht abschneiden. 
+danach prepare features. 
+
+missing values muss aber anders gemacht werden. 
+
+

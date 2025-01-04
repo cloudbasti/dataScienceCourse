@@ -129,6 +129,22 @@ def prepare_features(df):
     df_prepared['is_weekend_holiday'] = df_prepared['is_weekend_holiday'].fillna(
         0)
 
+    # Summer weekend indicator
+    df_prepared['is_summer_weekend'] = ((df_prepared['season'] == 'Summer') &
+                                    (df_prepared['is_weekend'] == 'Weekend')).astype(int)
+    df_prepared['is_summer_weekend'] = df_prepared['is_summer_weekend'].fillna(
+        0)
+
+    # High season indicators (specific summer months)
+    df_prepared['is_peak_summer'] = df_prepared['Datum'].dt.month.isin([
+                                                                   7, 8]).astype(int)
+    df_prepared['is_peak_summer'] = df_prepared['is_peak_summer'].fillna(
+        0)
+    df_prepared['is_peak_summer_weekend'] = (df_prepared['is_peak_summer'] &
+                                         (df_prepared['is_weekend'] == 'Weekend')).astype(int)
+    df_prepared['is_peak_summer_weekend'] = df_prepared['is_peak_summer_weekend'].fillna(
+        0)
+
     return df_prepared
 
 
