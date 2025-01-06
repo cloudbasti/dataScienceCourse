@@ -164,7 +164,7 @@ def prepare_and_predict_submission_nn(train_df, test_df):
         Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
         Dropout(0.4),
         Dense(32, activation='relu', kernel_regularizer=l2(0.01)),
-        Dropout(0.4),
+        Dropout(0.2),
         Dense(1)
     ])
 
