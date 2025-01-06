@@ -52,9 +52,8 @@ def create_product_features(df):
     season_dummies = [col for col in df.columns if col.startswith('season_')]
 
     time_features = weekday_dummies + month_dummies + season_dummies
-    event_features = ['is_holiday', 'is_school_holiday',
-                      'KielerWoche', 'is_nye', 'is_weekend_holiday', 'is_pre_holiday',
-                      'is_summer_weekend', 'is_peak_summer', 'is_peak_summer_weekend']
+    event_features = ['is_holiday', 'is_school_holiday', 'is_last_day_of_month', 'is_december_weekend', 'is_june_weekend',
+                      'KielerWoche', 'is_nye', 'is_christmas_eve', 'is_weekend_holiday', 'is_pre_holiday']
 
     all_features = []
 

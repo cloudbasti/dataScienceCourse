@@ -88,6 +88,16 @@ def prepare_features(df):
         df_prepared['Datum'].dt.day == 31)
     df_prepared['is_nye'] = df_prepared['is_nye'].fillna(0)
 
+    # Christmas Eve
+    df_prepared['is_christmas_eve'] = (df_prepared['Datum'].dt.month == 12) & (
+        df_prepared['Datum'].dt.day == 24)
+    df_prepared['is_christmas_eve'] = df_prepared['is_christmas_eve'].fillna(0)
+
+    # Last day of month
+    df_prepared['is_last_day_of_month'] = df_prepared['Datum'].dt.is_month_end
+    df_prepared['is_last_day_of_month'] = df_prepared['is_last_day_of_month'].fillna(
+        0)
+    
     # Pre-holiday indicator (day before holidays)
     # df_prepared['is_pre_holiday'] = df_prepared['Datum'].shift(-1).isin(df_prepared[df_prepared['is_holiday'] == 1]['Datum'])
 
@@ -162,6 +172,16 @@ def prepare_features(df):
                                         (df_prepared['is_weekend'] == 'Weekend')).astype(int)
     df_prepared['is_summer_weekend'] = df_prepared['is_summer_weekend'].fillna(
         0)
+
+
+    df_prepared['is_june_weekend'] = ((df_prepared['Datum'].dt.month == 6) &
+                                  (df_prepared['is_weekend'] == 'Weekend')).astype(int)
+    df_prepared['is_june_weekend'] = df_prepared['is_june_weekend'].fillna(0)
+
+    df_prepared['is_december_weekend'] = ((df_prepared['Datum'].dt.month == 12) &
+                                      (df_prepared['is_weekend'] == 'Weekend')).astype(int)
+    df_prepared['is_december_weekend'] = df_prepared['is_december_weekend'].fillna(
+    0)
 
     # High season indicators (specific summer months)
     df_prepared['is_peak_summer'] = df_prepared['Datum'].dt.month.isin([

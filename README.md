@@ -5,22 +5,11 @@ MOST IMPORTANT:
 1. Time Series Prediction als Features hinzufügen
 2. Learning Rate Optimization
 3. Dropout Layer Optimization
-4. Training Loss versus Validation Loss / MAPE
-5. Powerpoint erstellen 
+4. nochmal über die Interaction Features nachdenken und eventuell umsortieren
 
-6. Wetter Features und Wind noch genauer Splitten und verbessern. 
-7. Cyclical Months
-
-Optimierung: 
-3. nochmal über die Interaction Features nachdenken und eventuell umsortieren
-4. Cyclical month versuchen
-4. Optimieren des neuronalen Netzes
-5. Training Loss / Validation Loss / MAPE
 
 Statistiken und Analyse: 
-1. Deskriptive Statistiken für zwei Variablen
-2. what are weird values? 
-3. if a weather code is set to zero if its not existing, does this really make sense?
+1. WetterCodes mit 0 machen eventuell keinen Sinn
 
 Optional: 
 4. weitere Features hinzufügen
@@ -43,38 +32,4 @@ questions for AI:
 SOLUTIONS: 
 
 for the diagrams you need to make diagrams for the training and validation set based on the trained model. Also implement the MAPE, as in the notebooks. 
-
-
-
-Ohne Imputation:
-Neural Network Overall Performance:
-R-squared score: 0.850
-Root Mean Squared Error: 50.60
-
-Neural Network Performance by Product Category:
-
-Product 1:
-R-squared: 0.312
-RMSE: 35.31
-
-Product 2:
-R-squared: 0.715
-RMSE: 68.26
-
-Product 3:
-R-squared: 0.692
-RMSE: 42.42
-
-Product 4:
-R-squared: 0.197
-RMSE: 23.80
-
-Product 5:
-R-squared: 0.397
-RMSE: 68.93
-
-Product 6:
-R-squared: 0.023
-RMSE: 30.57
-
 
