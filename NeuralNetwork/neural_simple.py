@@ -72,7 +72,7 @@ def create_product_features(df):
     df_with_features['seasonal_bread_intensity'] = 0.0
     seasonal_bread = df_with_features['is_seasonal_bread'] == 1
 
-     # Assign intensity values based on the sales pattern
+    # Assign intensity values based on the sales pattern
     df_with_features.loc[seasonal_bread & (
         # October
         df_with_features['Datum'].dt.month == 10), 'seasonal_bread_intensity'] = 0.5
@@ -257,16 +257,16 @@ def prepare_and_predict_umsatz_nn(df):
         Dense(128, activation='relu', input_shape=(len(feature_columns),),
               kernel_regularizer=l2(0.01)),
         BatchNormalization(),
-        Dropout(0.3),
+        Dropout(0.40),
         Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
-        Dropout(0.3),
+        Dropout(0.4),
         Dense(32, activation='relu', kernel_regularizer=l2(0.01)),
-        Dropout(0.12),
+        Dropout(0.4),
         Dense(1)
     ])
 
-    #model.compile(optimizer=Adam(learning_rate=0.000665),
-    model.compile(optimizer=Adam(learning_rate=0.000557),
+    # model.compile(optimizer=Adam(learning_rate=0.000665),
+    model.compile(optimizer=Adam(learning_rate=0.000665),
                   loss='mse',
                   metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 

@@ -38,7 +38,7 @@ def create_product_features(df):
                       'KielerWoche', 'is_nye', 'is_christmas_eve', 'is_weekend_holiday', 'is_pre_holiday']
 
     all_features = []
-    df_with_features['Datum'] = pd.to_datetime(
+    """ df_with_features['Datum'] = pd.to_datetime(
         df_with_features['Datum'], errors='coerce')
 
     df_with_features['is_seasonal_bread'] = ((df_with_features['Warengruppe'] == 6) &
@@ -61,7 +61,7 @@ def create_product_features(df):
         # January
         df_with_features['Datum'].dt.month == 1), 'seasonal_bread_intensity'] = 0.4
 
-    all_features.extend(['is_seasonal_bread', 'seasonal_bread_intensity'])
+    all_features.extend(['is_seasonal_bread', 'seasonal_bread_intensity']) """
 
     # Temperature polynomials
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
@@ -160,11 +160,11 @@ def prepare_and_predict_submission_nn(train_df, test_df):
         Dense(128, activation='relu', input_shape=(len(feature_columns),),
               kernel_regularizer=l2(0.01)),
         BatchNormalization(),
-        Dropout(0.42),
+        Dropout(0.40),
         Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
-        Dropout(0.3),
+        Dropout(0.4),
         Dense(32, activation='relu', kernel_regularizer=l2(0.01)),
-        Dropout(0.12),
+        Dropout(0.4),
         Dense(1)
     ])
 
