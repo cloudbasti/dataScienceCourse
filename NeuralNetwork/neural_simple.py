@@ -1,20 +1,23 @@
 
-import matplotlib.pyplot as plt
-
-import os
-import sys
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import StandardScaler, PolynomialFeatures
-from sklearn.metrics import r2_score, mean_squared_error
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from tensorflow.keras.regularizers import l2
 
 import matplotlib
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
+from tensorflow.keras.models import Sequential
+import tensorflow as tf
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+import numpy as np
+import pandas as pd
+import sys
+import os
+import matplotlib.pyplot as plt
+
+import warnings
+warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
+
 matplotlib.use('Agg')
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,6 +26,7 @@ from data.train_split import split_train_validation  # NOQA
 from data.data_prep import prepare_features  # NOQA
 from data.data_prep import merge_datasets  # NOQA
 from data.data_prep import handle_missing_values  # NOQA
+from data.Final_wetter_imputation import analyze_weather_code_distribution, print_missing_analysis, impute_weather_data  # NOQA
 
 
 def create_callbacks():
@@ -234,7 +238,8 @@ def prepare_and_predict_umsatz_nn(df):
 def main():
     # Load and merge data
     df_merged = merge_datasets()
-    df_featured = prepare_features(df_merged)
+    df_imputed = impute_weather_data(df_merged)
+    df_featured = prepare_features(df_imputed)
     df_cleaned = handle_missing_values(df_featured)
 
     # Train model
