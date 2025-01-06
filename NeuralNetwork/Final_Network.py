@@ -19,6 +19,7 @@ from data.train_split import split_train_validation  # NOQA
 from data.data_prep import prepare_features  # NOQA
 from data.data_prep import merge_datasets  # NOQA
 from data.data_prep import handle_missing_values  # NOQA
+from data.Final_wetter_imputation import analyze_weather_code_distribution, print_missing_analysis, impute_weather_data  # NOQA
 
 
 def create_product_features(df):
@@ -172,7 +173,8 @@ def main():
     print("Loading and preparing training data...")
     # Load training data
     df_merged = merge_datasets()
-    df_featured = prepare_features(df_merged)
+    df_imputed = impute_weather_data(df_merged)
+    df_featured = prepare_features(df_imputed)
     df_cleaned = handle_missing_values(df_featured)
 
     print("\nLoading test data...")
