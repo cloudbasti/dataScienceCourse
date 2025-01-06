@@ -257,11 +257,11 @@ def prepare_and_predict_umsatz_nn(df):
         Dense(128, activation='relu', input_shape=(len(feature_columns),),
               kernel_regularizer=l2(0.01)),
         BatchNormalization(),
-        Dropout(0.40),
+        Dropout(0.3),
         Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
-        Dropout(0.4),
+        Dropout(0.30),
         Dense(32, activation='relu', kernel_regularizer=l2(0.01)),
-        Dropout(0.2),
+        Dropout(0.17),
         Dense(1)
     ])
 
