@@ -13,7 +13,7 @@ holidays = [
     ('Reformationstag', '2013-10-31'),
     ('Weihnachten', '2013-12-25'),
     ('2. Weihnachtstag', '2013-12-26'),
-    
+
     # 2014
     ('Neujahr', '2014-01-01'),
     ('Karfreitag', '2014-04-18'),
@@ -25,7 +25,7 @@ holidays = [
     ('Reformationstag', '2014-10-31'),
     ('Weihnachten', '2014-12-25'),
     ('2. Weihnachtstag', '2014-12-26'),
-    
+
     # 2015
     ('Neujahr', '2015-01-01'),
     ('Karfreitag', '2015-04-03'),
@@ -37,7 +37,7 @@ holidays = [
     ('Reformationstag', '2015-10-31'),
     ('Weihnachten', '2015-12-25'),
     ('2. Weihnachtstag', '2015-12-26'),
-    
+
     # 2016
     ('Neujahr', '2016-01-01'),
     ('Karfreitag', '2016-03-25'),
@@ -49,7 +49,7 @@ holidays = [
     ('Reformationstag', '2016-10-31'),
     ('Weihnachten', '2016-12-25'),
     ('2. Weihnachtstag', '2016-12-26'),
-    
+
     # 2017
     ('Neujahr', '2017-01-01'),
     ('Karfreitag', '2017-04-14'),
@@ -61,7 +61,7 @@ holidays = [
     ('Reformationstag', '2017-10-31'),
     ('Weihnachten', '2017-12-25'),
     ('2. Weihnachtstag', '2017-12-26'),
-    
+
     # 2018
     ('Neujahr', '2018-01-01'),
     ('Karfreitag', '2018-03-30'),
@@ -72,18 +72,29 @@ holidays = [
     ('Tag der Deutschen Einheit', '2018-10-03'),
     ('Reformationstag', '2018-10-31'),
     ('Weihnachten', '2018-12-25'),
-    ('2. Weihnachtstag', '2018-12-26')
+    ('2. Weihnachtstag', '2018-12-26'),
+
+    # 2019
+    ('Neujahr', '2019-01-01'),
+    ('Karfreitag', '2019-04-19'),
+    ('Ostermontag', '2019-04-22'),
+    ('Tag der Arbeit', '2019-05-01'),
+    ('Christi Himmelfahrt', '2019-05-30'),
+    ('Pfingstmontag', '2019-06-10'),
+    ('Tag der Deutschen Einheit', '2019-10-03'),
+    ('Reformationstag', '2019-10-31'),
+    ('Weihnachten', '2019-12-25'),
+    ('2. Weihnachtstag', '2019-12-26')
 ]
 
 # Create DataFrame
-df = pd.DataFrame(holidays, columns=['holiday_name','Datum'])
+df = pd.DataFrame(holidays, columns=['holiday_name', 'Datum'])
 
 # Convert date to datetime
 df['Datum'] = pd.to_datetime(df['Datum'])
 
 # Sort by date
 df = df.sort_values('Datum')
-
 
 
 # Add is_holiday column (all 1s since these are all holidays)
@@ -99,7 +110,8 @@ df.to_csv('data/bank_holidays.csv', index=False)
 # Display some basic statistics
 print("\nSummary:")
 print(f"Total number of holidays: {len(df)}")
-print(f"Date range: from {df['Datum'].min().date()} to {df['Datum'].max().date()}")
+print(f"Date range: from {df['Datum'].min().date()} to {
+      df['Datum'].max().date()}")
 print(f"\nUnique holidays ({len(df['holiday_name'].unique())} total):")
 for holiday in sorted(df['holiday_name'].unique()):
     print(f"- {holiday}")

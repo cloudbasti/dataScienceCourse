@@ -2,8 +2,6 @@
 
 # to do: 
 MOST IMPORTANT: 
-1. Add Bank holidays and holidays to create_bank/school_holidays 
-2. Data Imputation / vielleicht unterschiedlich für Training Set und Final Set
 3. Time Series Prediction als Features hinzufügen
 
 Optimierung: 
