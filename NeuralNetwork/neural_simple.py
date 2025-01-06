@@ -50,8 +50,6 @@ def create_callbacks():
 def create_product_features(df):
     df_with_features = df.copy()
 
-    # lag_features = [col for col in df.columns if 'turnover_lag' in col]
-
     weather_features = ['Temperatur', 'Bewoelkung']
     weather_codes = [col for col in df.columns if col.startswith('weather_')]
     wind_features = [col for col in df.columns if col.startswith('wind_')]
@@ -65,7 +63,6 @@ def create_product_features(df):
                       'KielerWoche', 'is_nye', 'is_weekend_holiday', 'is_pre_holiday']
 
     all_features = []
-    # all_features.extend(lag_features)
 
     # Temperature polynomials
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
@@ -134,20 +131,15 @@ def create_product_features(df):
             df_with_features['Temp2']
         all_features.append(col_name)
 
-        # Add interactions with lag features for each product
-        """ for lag_feature in lag_features:
-            if str(product_id) in lag_feature:  # Only use lags relevant to this product
-                col_name = f'{lag_feature}_interaction'
-                df_with_features[col_name] = df_with_features[product_col] * \
-                    df_with_features[lag_feature]
-                all_features.append(col_name) """
-
     return df_with_features, all_features
 
 
-def plot_history(history):
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 4))
+def plot_history(history, product_metrics):
+    # Create figure with 2 rows, first row for loss and errors, second row for MAPE
+    fig = plt.figure(figsize=(24, 8))
 
+    # First row plots
+    ax1 = plt.subplot(2, 2, 1)
     ax1.plot(history.history['loss'], label='Training')
     ax1.plot(history.history['val_loss'], label='Validation')
     ax1.set_title('Loss Over Time')
@@ -155,6 +147,7 @@ def plot_history(history):
     ax1.set_ylabel('Loss')
     ax1.legend()
 
+    ax2 = plt.subplot(2, 2, 2)
     ax2.plot(history.history['mae'], label='Training')
     ax2.plot(history.history['val_mae'], label='Validation')
     ax2.set_title('Mean Absolute Error Over Time')
@@ -162,7 +155,8 @@ def plot_history(history):
     ax2.set_ylabel('MAE')
     ax2.legend()
 
-    # MAPE plot
+    # Second row plots - MAPE
+    ax3 = plt.subplot(2, 2, 3)
     ax3.plot(
         history.history['mean_absolute_percentage_error'], label='Training')
     ax3.plot(
@@ -171,6 +165,18 @@ def plot_history(history):
     ax3.set_xlabel('Epoch')
     ax3.set_ylabel('MAPE (%)')
     ax3.legend()
+
+    # Product-specific MAPE plot
+    ax4 = plt.subplot(2, 2, 4)
+    products = list(product_metrics.keys())
+    mape_values = [metrics['MAPE'] for metrics in product_metrics.values()]
+
+    ax4.bar(products, mape_values)
+    ax4.set_title('MAPE by Product Category')
+    ax4.set_ylabel('MAPE (%)')
+    ax4.set_xlabel('Product Category')
+    for i, v in enumerate(mape_values):
+        ax4.text(i, v, f'{v:.1f}%', ha='center', va='bottom')
 
     plt.tight_layout()
     plt.savefig('training_history.png')
@@ -195,37 +201,22 @@ def prepare_and_predict_umsatz_nn(df):
         y_train.values.reshape(-1, 1)).ravel()
     y_test_scaled = scaler_y.transform(y_test.values.reshape(-1, 1)).ravel()
 
-    """ model = Sequential([
-        Dense(256, activation='relu', input_shape=(len(feature_columns),)),
-        BatchNormalization(),
-        Dropout(0.3),
-        Dense(128, activation='relu'),
-        Dropout(0.2),
-        Dense(64, activation='relu'),
-        Dropout(0.1),
-        Dense(32, activation='relu'),
-        Dense(1)
-    ]) """
-
     model = Sequential([
         Dense(128, activation='relu', input_shape=(len(feature_columns),),
-              kernel_regularizer=l2(0.01)),  # Reduced from 256 to 128
+              kernel_regularizer=l2(0.01)),
         BatchNormalization(),
         Dropout(0.3),
-        # Reduced from 128 to 64
         Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
         Dropout(0.3),
-        # Reduced from 64 to 32
         Dense(32, activation='relu', kernel_regularizer=l2(0.01)),
         Dropout(0.12),
-        Dense(1)  # Output layer remains the same
+        Dense(1)
     ])
 
     model.compile(optimizer=Adam(learning_rate=0.000803),
                   loss='mse',
                   metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 
-    # Using the new callbacks
     callbacks = create_callbacks()
 
     history = model.fit(X_train_scaled, y_train_scaled,
@@ -233,7 +224,7 @@ def prepare_and_predict_umsatz_nn(df):
                         batch_size=32,
                         validation_data=(X_test_scaled, y_test_scaled),
                         callbacks=callbacks,
-                        verbose=1)
+                        verbose=2)
 
     y_pred_scaled = model.predict(X_test_scaled)
     y_pred = scaler_y.inverse_transform(y_pred_scaled)
@@ -242,6 +233,10 @@ def prepare_and_predict_umsatz_nn(df):
     r2 = r2_score(y_test_unscaled, y_pred)
     rmse = np.sqrt(mean_squared_error(y_test_unscaled, y_pred))
 
+    # Calculate overall MAPE
+    overall_mape = np.mean(
+        np.abs((y_test_unscaled - y_pred) / y_test_unscaled)) * 100
+
     product_metrics = {}
     for product_id in range(1, 7):
         mask = X_test[f'is_product_{product_id}'] == 1
@@ -249,10 +244,14 @@ def prepare_and_predict_umsatz_nn(df):
             product_r2 = r2_score(y_test_unscaled[mask], y_pred[mask])
             product_rmse = np.sqrt(mean_squared_error(
                 y_test_unscaled[mask], y_pred[mask]))
+            product_mape = np.mean(
+                np.abs((y_test_unscaled[mask] - y_pred[mask]) / y_test_unscaled[mask])) * 100
             product_metrics[f"Product {product_id}"] = {
-                'R2': product_r2, 'RMSE': product_rmse}
+                'R2': product_r2,
+                'RMSE': product_rmse,
+                'MAPE': product_mape}
 
-    return model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns
+    return model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns, overall_mape
 
 
 def main():
@@ -263,22 +262,24 @@ def main():
     df_cleaned = handle_missing_values(df_featured)
 
     # Train model
-    model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns = prepare_and_predict_umsatz_nn(
+    model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns, overall_mape = prepare_and_predict_umsatz_nn(
         df_cleaned)
 
     # Print results
     print(f"\nNeural Network Overall Performance:")
     print(f"R-squared score: {r2:.3f}")
     print(f"Root Mean Squared Error: {rmse:.2f}")
+    print(f"Overall MAPE: {overall_mape:.2f}%")
 
     print("\nNeural Network Performance by Product Category:")
     for category, metrics in product_metrics.items():
         print(f"\n{category}:")
         print(f"R-squared: {metrics['R2']:.3f}")
         print(f"RMSE: {metrics['RMSE']:.2f}")
+        print(f"MAPE: {metrics['MAPE']:.2f}%")
 
     # Plot training history
-    plot_history(history)
+    plot_history(history, product_metrics)
 
 
 if __name__ == "__main__":
