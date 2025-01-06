@@ -2,7 +2,14 @@
 
 # to do: 
 MOST IMPORTANT: 
-3. Time Series Prediction als Features hinzufügen
+1. Time Series Prediction als Features hinzufügen
+2. Learning Rate Optimization
+3. Dropout Layer Optimization
+4. Training Loss versus Validation Loss / MAPE
+5. Powerpoint erstellen 
+
+6. Wetter Features und Wind noch genauer Splitten und verbessern. 
+7. Cyclical Months
 
 Optimierung: 
 3. nochmal über die Interaction Features nachdenken und eventuell umsortieren

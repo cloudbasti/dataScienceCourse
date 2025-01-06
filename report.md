@@ -185,3 +185,26 @@ R-squared: 0.206
 RMSE: 27.55
 
 Effekt so direkt erstmal nicht sichtbar.
+
+Präsentation (Powerpoint, Keybote oder ähnliches)
+Jedes Team hält eine 8 oder 10-minütige Abschlusspräsentation (genaue Info erfolgt in der Vorwoche - bitte darauf achten, dass Ihr die Länge einhaltet!) mit den folgenden Inhalten:
+
+# Euren Namen auf der Titelseite DONE
+
+# Auflistung und kurze Beschreibung der selbst erstellten Variablen DONE
+
+Balkendiagramme mit Konfidenzintervallen für zwei selbst erstellte Variablen
+
+Optimierung des linearen Modells: Modellgleichung und adjusted r²
+
+Art der Missing Value Imputation
+
+Optimierung des neuronalen Netzes:
+
+Source Code zur Definition des neuronalen Netzes
+
+Darstellung der Loss-Funktionen für Trainings- und Validierungsdatensatz
+
+MAPEs für den Validierungsdatensatz insgesamt und für jede Warengruppe einzeln
+
+„Worst Fail“ / „Best Improvement“

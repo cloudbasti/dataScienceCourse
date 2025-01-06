@@ -18,6 +18,7 @@ from data.data_prep import handle_missing_values  # NOQA
 from data.data_prep import merge_datasets  # NOQA
 from data.data_prep import prepare_features  # NOQA
 from data.train_split import split_train_validation  # NOQA
+from data.Final_wetter_imputation import analyze_weather_code_distribution, print_missing_analysis, impute_weather_data  # NOQA
 
 
 def create_callbacks():
@@ -176,7 +177,7 @@ def prepare_and_predict_umsatz_nn(df, learning_rate=0.001):
 
     callbacks = create_callbacks()
     history = model.fit(X_train_scaled, y_train_scaled,
-                        epochs=30,
+                        epochs=50,
                         batch_size=32,
                         validation_data=(X_test_scaled, y_test_scaled),
                         callbacks=callbacks,
@@ -242,12 +243,13 @@ def plot_learning_rate_results(results_df):
 
 def main():
     df_merged = merge_datasets()
-    df_featured = prepare_features(df_merged)
+    df_imputed = impute_weather_data(df_merged)
+    df_featured = prepare_features(df_imputed)
     df_cleaned = handle_missing_values(df_featured)
 
-    min_lr = 0.00001
-    max_lr = 0.0001
-    num_steps = 10
+    min_lr = 0.0003
+    max_lr = 0.0009
+    num_steps = 30
     learning_rates = np.logspace(np.log10(min_lr), np.log10(max_lr), num_steps)
 
     results = []

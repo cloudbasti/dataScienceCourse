@@ -1,6 +1,5 @@
-
-
 import matplotlib
+import tensorflow as tf
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam
@@ -51,6 +50,8 @@ def create_callbacks():
 def create_product_features(df):
     df_with_features = df.copy()
 
+    # lag_features = [col for col in df.columns if 'turnover_lag' in col]
+
     weather_features = ['Temperatur', 'Bewoelkung']
     weather_codes = [col for col in df.columns if col.startswith('weather_')]
     wind_features = [col for col in df.columns if col.startswith('wind_')]
@@ -64,6 +65,7 @@ def create_product_features(df):
                       'KielerWoche', 'is_nye', 'is_weekend_holiday', 'is_pre_holiday']
 
     all_features = []
+    # all_features.extend(lag_features)
 
     # Temperature polynomials
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
@@ -132,11 +134,19 @@ def create_product_features(df):
             df_with_features['Temp2']
         all_features.append(col_name)
 
+        # Add interactions with lag features for each product
+        """ for lag_feature in lag_features:
+            if str(product_id) in lag_feature:  # Only use lags relevant to this product
+                col_name = f'{lag_feature}_interaction'
+                df_with_features[col_name] = df_with_features[product_col] * \
+                    df_with_features[lag_feature]
+                all_features.append(col_name) """
+
     return df_with_features, all_features
 
 
 def plot_history(history):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 4))
 
     ax1.plot(history.history['loss'], label='Training')
     ax1.plot(history.history['val_loss'], label='Validation')
@@ -151,6 +161,16 @@ def plot_history(history):
     ax2.set_xlabel('Epoch')
     ax2.set_ylabel('MAE')
     ax2.legend()
+
+    # MAPE plot
+    ax3.plot(
+        history.history['mean_absolute_percentage_error'], label='Training')
+    ax3.plot(
+        history.history['val_mean_absolute_percentage_error'], label='Validation')
+    ax3.set_title('Mean Absolute Percentage Error Over Time')
+    ax3.set_xlabel('Epoch')
+    ax3.set_ylabel('MAPE (%)')
+    ax3.legend()
 
     plt.tight_layout()
     plt.savefig('training_history.png')
@@ -191,7 +211,7 @@ def prepare_and_predict_umsatz_nn(df):
         Dense(128, activation='relu', input_shape=(len(feature_columns),),
               kernel_regularizer=l2(0.01)),  # Reduced from 256 to 128
         BatchNormalization(),
-        Dropout(0.42),
+        Dropout(0.3),
         # Reduced from 128 to 64
         Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
         Dropout(0.3),
@@ -201,9 +221,9 @@ def prepare_and_predict_umsatz_nn(df):
         Dense(1)  # Output layer remains the same
     ])
 
-    model.compile(optimizer=Adam(learning_rate=0.000452),
+    model.compile(optimizer=Adam(learning_rate=0.000803),
                   loss='mse',
-                  metrics=['mae'])
+                  metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 
     # Using the new callbacks
     callbacks = create_callbacks()

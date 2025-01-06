@@ -3,11 +3,39 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
 
+def add_time_series_features(df):
+    """
+    Add time series features (lagged values) for each product group's turnover.
+    """
+    df_with_lags = df.copy()
+    df_with_lags = df_with_lags.sort_values(['Datum', 'Warengruppe'])
+
+    for product_group in df_with_lags['Warengruppe'].unique():
+        mask = df_with_lags['Warengruppe'] == product_group
+        for lag in range(1, 8):
+            col_name = f'turnover_lag_{lag}_days_group_{product_group}'
+            df_with_lags.loc[mask, col_name] = df_with_lags.loc[mask, 'Umsatz'].shift(
+                lag)
+
+    lag_columns = [
+        col for col in df_with_lags.columns if 'turnover_lag' in col]
+    for col in lag_columns:
+        product_group = int(col.split('_')[-1])
+        mask = df_with_lags['Warengruppe'] == product_group
+        mean_value = df_with_lags.loc[mask, col].mean()
+        df_with_lags.loc[mask, col] = df_with_lags.loc[mask,
+                                                       col].fillna(mean_value)
+
+    return df_with_lags
+
+
 def prepare_features(df):
     df_prepared = df.copy()
 
     # Convert date
     df_prepared['Datum'] = pd.to_datetime(df_prepared['Datum'])
+
+    df_prepared = add_time_series_features(df_prepared)
 
     # Clean weather codes
     df_prepared['Wettercode'] = pd.to_numeric(
