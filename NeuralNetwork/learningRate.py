@@ -56,6 +56,28 @@ def create_product_features(df):
                       'KielerWoche', 'is_nye', 'is_christmas_eve', 'is_weekend_holiday', 'is_pre_holiday']
 
     all_features = []
+    
+    df_with_features['is_seasonal_bread'] = ((df_with_features['Warengruppe'] == 6) &
+                                             df_with_features['Datum'].dt.month.isin([10, 11, 12, 1])).astype(int)
+
+    df_with_features['seasonal_bread_intensity'] = 0.0
+    seasonal_bread = df_with_features['is_seasonal_bread'] == 1
+
+    # Assign intensity values based on the sales pattern
+    df_with_features.loc[seasonal_bread & (
+        # October
+        df_with_features['Datum'].dt.month == 10), 'seasonal_bread_intensity'] = 0.5
+    df_with_features.loc[seasonal_bread & (
+        # November (peak)
+        df_with_features['Datum'].dt.month == 11), 'seasonal_bread_intensity'] = 1.0
+    df_with_features.loc[seasonal_bread & (
+        # December (peak)
+        df_with_features['Datum'].dt.month == 12), 'seasonal_bread_intensity'] = 1.2
+    df_with_features.loc[seasonal_bread & (
+        # January
+        df_with_features['Datum'].dt.month == 1), 'seasonal_bread_intensity'] = 0.4
+
+    all_features.extend(['is_seasonal_bread', 'seasonal_bread_intensity'])
 
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
     temp_features = temp_poly.fit_transform(df_with_features[['Temperatur']])
@@ -246,9 +268,9 @@ def main():
     df_featured = prepare_features(df_imputed)
     df_cleaned = handle_missing_values(df_featured)
 
-    min_lr = 0.0003
-    max_lr = 0.0009
-    num_steps = 30
+    min_lr = 0.000500
+    max_lr = 0.000600
+    num_steps = 10
     learning_rates = np.logspace(np.log10(min_lr), np.log10(max_lr), num_steps)
 
     results = []

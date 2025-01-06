@@ -64,30 +64,6 @@ def create_product_features(df):
 
     all_features = []
 
-    df_with_features['Datum'] = pd.to_datetime(
-        df_with_features['Datum'], errors='coerce')
-    df_with_features['is_seasonal_bread'] = ((df_with_features['Warengruppe'] == 6) &
-                                             df_with_features['Datum'].dt.month.isin([10, 11, 12, 1])).astype(int)
-
-    df_with_features['seasonal_bread_intensity'] = 0.0
-    seasonal_bread = df_with_features['is_seasonal_bread'] == 1
-
-     # Assign intensity values based on the sales pattern
-    df_with_features.loc[seasonal_bread & (
-        # October
-        df_with_features['Datum'].dt.month == 10), 'seasonal_bread_intensity'] = 0.5
-    df_with_features.loc[seasonal_bread & (
-        # November (peak)
-        df_with_features['Datum'].dt.month == 11), 'seasonal_bread_intensity'] = 1.0
-    df_with_features.loc[seasonal_bread & (
-        # December (peak)
-        df_with_features['Datum'].dt.month == 12), 'seasonal_bread_intensity'] = 1.2
-    df_with_features.loc[seasonal_bread & (
-        # January
-        df_with_features['Datum'].dt.month == 1), 'seasonal_bread_intensity'] = 0.4
-
-    all_features.extend(['is_seasonal_bread', 'seasonal_bread_intensity'])
-
     """ product6_features = ['p6_is_season', 'p6_season_intensity']
     mask_p6 = df_with_features['Warengruppe'] == 6
     if mask_p6.any():
@@ -265,8 +241,7 @@ def prepare_and_predict_umsatz_nn(df):
         Dense(1)
     ])
 
-    #model.compile(optimizer=Adam(learning_rate=0.000665),
-    model.compile(optimizer=Adam(learning_rate=0.000557),
+    model.compile(optimizer=Adam(learning_rate=0.000665),
                   loss='mse',
                   metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 

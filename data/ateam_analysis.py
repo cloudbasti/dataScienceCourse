@@ -203,6 +203,155 @@ def create_summary_report(df):
         f.write("\n".join(summary))
 
 
+def analyze_product_6(df):
+    """Detailed analysis for Product 6 with seasonal focus"""
+    df_p6 = df[df['Warengruppe'] == 6].copy()
+
+    # Add seasonal period flag
+    df_p6['is_seasonal_period'] = df_p6['Datum'].dt.month.isin(
+        [1, 10, 11, 12]).astype(int)
+
+    # Analyze weekday patterns within seasonal period
+    seasonal_weekday_stats = df_p6[df_p6['is_seasonal_period'] == 1].groupby('Wochentag')['Umsatz'].agg([
+        'mean', 'std', 'count'
+    ]).round(2)
+
+    # Create weekday turnover visualization
+    plt.figure(figsize=(12, 6))
+    weekdays = ['Monday', 'Tuesday', 'Wednesday',
+                'Thursday', 'Friday', 'Saturday', 'Sunday']
+    seasonal_means = [seasonal_weekday_stats.loc[day, 'mean']
+                      if day in seasonal_weekday_stats.index else 0 for day in weekdays]
+
+    bars = plt.bar(weekdays, seasonal_means)
+    plt.title('Product 6: Average Turnover by Weekday (Seasonal Period Only)')
+    plt.xlabel('Weekday')
+    plt.ylabel('Average Turnover (€)')
+    plt.xticks(rotation=45)
+
+    # Add value labels
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                 f'€{height:.2f}',
+                 ha='center', va='bottom')
+
+    plt.tight_layout()
+    plt.savefig('analysis_results/product6_seasonal_weekday.png')
+    plt.close()
+
+    # Calculate and save seasonal statistics
+    seasonal_stats = pd.DataFrame({
+        'in_season_avg': df_p6[df_p6['is_seasonal_period'] == 1]['Umsatz'].mean(),
+        'out_of_season_avg': df_p6[df_p6['is_seasonal_period'] == 0]['Umsatz'].mean(),
+        'in_season_days': df_p6[df_p6['is_seasonal_period'] == 1]['Umsatz'].count(),
+        'out_of_season_days': df_p6[df_p6['is_seasonal_period'] == 0]['Umsatz'].count()
+    }, index=['Product 6'])
+
+    seasonal_stats.to_csv('analysis_results/product6_seasonal_stats.csv')
+    seasonal_weekday_stats.to_csv(
+        'analysis_results/product6_seasonal_weekday_stats.csv')
+    df_p6 = df[df['Warengruppe'] == 6].copy()
+
+    # Outlier Analysis
+    Q1 = df_p6['Umsatz'].quantile(0.25)
+    Q3 = df_p6['Umsatz'].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    outliers = df_p6[(df_p6['Umsatz'] < lower_bound) |
+                     (df_p6['Umsatz'] > upper_bound)].copy()
+
+    plt.figure(figsize=(12, 6))
+    plt.scatter(df_p6['Datum'], df_p6['Umsatz'], alpha=0.5, label='Normal')
+    plt.scatter(outliers['Datum'], outliers['Umsatz'],
+                color='red', alpha=0.7, label='Outliers')
+    plt.title('Product 6: Turnover Distribution with Outliers')
+    plt.xlabel('Date')
+    plt.ylabel('Turnover (€)')
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig('analysis_results/product6_outliers.png')
+    plt.close()
+
+    outliers_stats = pd.DataFrame({
+        'total_points': len(df_p6),
+        'outliers': len(outliers),
+        'outlier_percentage': (len(outliers) / len(df_p6)) * 100,
+        'mean_turnover': df_p6['Umsatz'].mean(),
+        'outlier_mean_turnover': outliers['Umsatz'].mean()
+    }, index=['Product 6'])
+
+    monthly_stats = df_p6.groupby(df_p6['Datum'].dt.month)['Umsatz'].agg([
+        'mean', 'std', 'count'
+    ]).round(2)
+
+    plt.figure(figsize=(12, 6))
+    monthly_stats['mean'].plot(kind='bar')
+    plt.title('Product 6: Average Monthly Turnover')
+    plt.xlabel('Month')
+    plt.ylabel('Average Turnover (€)')
+    plt.tight_layout()
+    plt.savefig('analysis_results/product6_monthly.png')
+    plt.close()
+
+    weather_impact = pd.DataFrame()
+    weather_cols = [col for col in df_p6.columns if col.startswith('weather_')]
+
+    for weather in weather_cols:
+        avg_turnover = df_p6[df_p6[weather] == 1]['Umsatz'].mean()
+        weather_impact.loc[weather, 'avg_turnover'] = avg_turnover
+
+    plt.figure(figsize=(12, 6))
+    weather_impact['avg_turnover'].plot(kind='bar')
+    plt.title('Product 6: Average Turnover by Weather Condition')
+    plt.xlabel('Weather Condition')
+    plt.ylabel('Average Turnover (€)')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig('analysis_results/product6_weather.png')
+    plt.close()
+
+    dow_stats = df_p6.groupby('Wochentag')['Umsatz'].agg([
+        'mean', 'std', 'count'
+    ]).round(2)
+
+    plt.figure(figsize=(10, 6))
+    dow_stats['mean'].plot(kind='bar')
+    plt.title('Product 6: Average Turnover by Day of Week')
+    plt.xlabel('Day of Week')
+    plt.ylabel('Average Turnover (€)')
+    plt.tight_layout()
+    plt.savefig('analysis_results/product6_dow.png')
+    plt.close()
+
+    temp_corr = df_p6['Umsatz'].corr(df_p6['Temperatur'])
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df_p6['Temperatur'], df_p6['Umsatz'], alpha=0.5)
+    plt.title(
+        f'Product 6: Turnover vs Temperature (correlation: {temp_corr:.2f})')
+    plt.xlabel('Temperature')
+    plt.ylabel('Turnover (€)')
+    plt.tight_layout()
+    plt.savefig('analysis_results/product6_temperature.png')
+    plt.close()
+
+    monthly_stats.to_csv('analysis_results/product6_monthly_stats.csv')
+    outliers_stats.to_csv('analysis_results/product6_outlier_stats.csv')
+    weather_impact.to_csv('analysis_results/product6_weather_impact.csv')
+    dow_stats.to_csv('analysis_results/product6_dow_stats.csv')
+
+    return {
+        'outliers_stats': outliers_stats,
+        'monthly_stats': monthly_stats,
+        'weather_impact': weather_impact,
+        'dow_stats': dow_stats,
+        'temp_correlation': temp_corr
+    }
+
+
 def main():
     os.makedirs("analysis_results", exist_ok=True)
 
@@ -229,6 +378,9 @@ def main():
 
     print("Analyzing Christmas Eve patterns...")
     analyze_christmas_eve(df)
+
+    print("Analyzing Product 6 (Seasonal Bread)...")
+    analyze_product_6(df)
 
     print("Creating summary report...")
     create_summary_report(df)

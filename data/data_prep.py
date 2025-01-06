@@ -29,6 +29,28 @@ def add_time_series_features(df):
     return df_with_lags
 
 
+def add_seasonal_product6_features(df):
+    mask = df['Warengruppe'] == 6
+
+    # Basic season flag (Oct-Jan)
+    df.loc[mask, 'p6_is_season'] = df.loc[mask,
+                                          'Datum'].dt.month.isin([10, 11, 12, 1]).astype(int)
+
+    # Seasonal intensity (peak in December)
+    df.loc[mask, 'p6_season_intensity'] = 0
+    seasonal_mask = mask & df['p6_is_season'].astype(bool)
+    df.loc[seasonal_mask & (df['Datum'].dt.month == 10),
+           'p6_season_intensity'] = 0.3  # Season start
+    df.loc[seasonal_mask & (df['Datum'].dt.month == 11),
+           'p6_season_intensity'] = 0.7  # Building up
+    df.loc[seasonal_mask & (df['Datum'].dt.month == 12),
+           'p6_season_intensity'] = 1.0  # Peak
+    df.loc[seasonal_mask & (df['Datum'].dt.month == 1),
+           'p6_season_intensity'] = 0.4   # Winding down
+
+    return df
+
+
 def prepare_features(df):
     df_prepared = df.copy()
 
@@ -97,7 +119,7 @@ def prepare_features(df):
     df_prepared['is_last_day_of_month'] = df_prepared['Datum'].dt.is_month_end
     df_prepared['is_last_day_of_month'] = df_prepared['is_last_day_of_month'].fillna(
         0)
-    
+
     # Pre-holiday indicator (day before holidays)
     # df_prepared['is_pre_holiday'] = df_prepared['Datum'].shift(-1).isin(df_prepared[df_prepared['is_holiday'] == 1]['Datum'])
 
@@ -173,15 +195,14 @@ def prepare_features(df):
     df_prepared['is_summer_weekend'] = df_prepared['is_summer_weekend'].fillna(
         0)
 
-
     df_prepared['is_june_weekend'] = ((df_prepared['Datum'].dt.month == 6) &
-                                  (df_prepared['is_weekend'] == 'Weekend')).astype(int)
+                                      (df_prepared['is_weekend'] == 'Weekend')).astype(int)
     df_prepared['is_june_weekend'] = df_prepared['is_june_weekend'].fillna(0)
 
     df_prepared['is_december_weekend'] = ((df_prepared['Datum'].dt.month == 12) &
-                                      (df_prepared['is_weekend'] == 'Weekend')).astype(int)
+                                          (df_prepared['is_weekend'] == 'Weekend')).astype(int)
     df_prepared['is_december_weekend'] = df_prepared['is_december_weekend'].fillna(
-    0)
+        0)
 
     # High season indicators (specific summer months)
     df_prepared['is_peak_summer'] = df_prepared['Datum'].dt.month.isin([
@@ -192,6 +213,8 @@ def prepare_features(df):
                                              (df_prepared['is_weekend'] == 'Weekend')).astype(int)
     df_prepared['is_peak_summer_weekend'] = df_prepared['is_peak_summer_weekend'].fillna(
         0)
+    
+    """ df_prepared = add_seasonal_product6_features(df_prepared) """
 
     return df_prepared
 
