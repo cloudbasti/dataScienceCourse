@@ -131,17 +131,17 @@ def prepare_features(df):
 
     # Summer weekend indicator
     df_prepared['is_summer_weekend'] = ((df_prepared['season'] == 'Summer') &
-                                    (df_prepared['is_weekend'] == 'Weekend')).astype(int)
+                                        (df_prepared['is_weekend'] == 'Weekend')).astype(int)
     df_prepared['is_summer_weekend'] = df_prepared['is_summer_weekend'].fillna(
         0)
 
     # High season indicators (specific summer months)
     df_prepared['is_peak_summer'] = df_prepared['Datum'].dt.month.isin([
-                                                                   7, 8]).astype(int)
+        7, 8]).astype(int)
     df_prepared['is_peak_summer'] = df_prepared['is_peak_summer'].fillna(
         0)
     df_prepared['is_peak_summer_weekend'] = (df_prepared['is_peak_summer'] &
-                                         (df_prepared['is_weekend'] == 'Weekend')).astype(int)
+                                             (df_prepared['is_weekend'] == 'Weekend')).astype(int)
     df_prepared['is_peak_summer_weekend'] = df_prepared['is_peak_summer_weekend'].fillna(
         0)
 
@@ -193,7 +193,7 @@ def handle_missing_values(df):
 
 def merge_datasets():
     # Load all datasets
-    weather = pd.read_csv("data/wetter.csv")
+    weather = pd.read_csv("data/wetter_imputed.csv")
     turnover = pd.read_csv("data/umsatzdaten_gekuerzt.csv")
     kiwo = pd.read_csv("data/kiwo.csv")
     school_holidays = pd.read_csv("data/school_holidays.csv")

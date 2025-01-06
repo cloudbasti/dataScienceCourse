@@ -40,3 +40,36 @@ SOLUTIONS:
 for the diagrams you need to make diagrams for the training and validation set based on the trained model. Also implement the MAPE, as in the notebooks. 
 
 
+
+Ohne Imputation:
+Neural Network Overall Performance:
+R-squared score: 0.850
+Root Mean Squared Error: 50.60
+
+Neural Network Performance by Product Category:
+
+Product 1:
+R-squared: 0.312
+RMSE: 35.31
+
+Product 2:
+R-squared: 0.715
+RMSE: 68.26
+
+Product 3:
+R-squared: 0.692
+RMSE: 42.42
+
+Product 4:
+R-squared: 0.197
+RMSE: 23.80
+
+Product 5:
+R-squared: 0.397
+RMSE: 68.93
+
+Product 6:
+R-squared: 0.023
+RMSE: 30.57
+
+
