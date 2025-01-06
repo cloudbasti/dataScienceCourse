@@ -8,7 +8,7 @@ def merge_test_datasets():
     initial_test_rows = len(test_df)
     print(f"Initial test data rows: {test_df.shape}")
 
-    weather = pd.read_csv("data/wetter.csv")
+    weather = pd.read_csv("data/wetter_imputed.csv")
     kiwo = pd.read_csv("data/kiwo.csv")
     school_holidays = pd.read_csv("data/school_holidays.csv")
     public_holidays = pd.read_csv("data/bank_holidays.csv")
@@ -51,7 +51,7 @@ def prepare_features(df):
     df_prepared['Wettercode'] = pd.to_numeric(
         df_prepared['Wettercode'], errors='coerce')
     mask = (df_prepared['Wettercode'] >= 0) & (df_prepared['Wettercode'] <= 99)
-    print(f"Invalid weather codes removed: {(~mask).sum()}")
+    print(f"Number of weather codes outside 0-99 range:{(~mask).sum()}")
 
     # for the weather also the most frequent ones might need to get their own features.
 
