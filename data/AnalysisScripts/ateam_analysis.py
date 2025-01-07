@@ -203,6 +203,177 @@ def create_summary_report(df):
         f.write("\n".join(summary))
 
 
+def analyze_product_4(df):
+    """Detailed analysis for Product 4 including temporal patterns and external factors"""
+    df_p4 = df[df['Warengruppe'] == 4].copy()
+
+    # Basic statistics
+    basic_stats = df_p4['Umsatz'].describe().round(2)
+    basic_stats.to_csv('analysis_results/product4_basic_stats.csv')
+
+    # Monthly analysis
+    monthly_stats = df_p4.groupby(df_p4['Datum'].dt.month)['Umsatz'].agg([
+        'mean', 'std', 'count', 'median', 'min', 'max'
+    ]).round(2)
+
+    plt.figure(figsize=(12, 6))
+    monthly_means = monthly_stats['mean']
+    bars = plt.bar(range(1, 13), monthly_means)
+    plt.title('Product 4: Average Monthly Turnover')
+    plt.xlabel('Month')
+    plt.ylabel('Average Turnover (€)')
+
+    # Add value labels
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                 f'€{height:.2f}',
+                 ha='center', va='bottom')
+
+    plt.tight_layout()
+    plt.savefig('analysis_results/product4_monthly.png')
+    plt.close()
+
+    # Weekday analysis with detailed statistics
+    dow_stats = df_p4.groupby('Wochentag')['Umsatz'].agg([
+        'mean', 'std', 'count', 'median', 'min', 'max'
+    ]).round(2)
+
+    plt.figure(figsize=(12, 6))
+    weekdays = ['Monday', 'Tuesday', 'Wednesday',
+                'Thursday', 'Friday', 'Saturday', 'Sunday']
+    weekday_means = [dow_stats.loc[day, 'mean']
+                     if day in dow_stats.index else 0 for day in weekdays]
+
+    bars = plt.bar(weekdays, weekday_means)
+    plt.title('Product 4: Average Turnover by Weekday')
+    plt.xlabel('Weekday')
+    plt.ylabel('Average Turnover (€)')
+    plt.xticks(rotation=45)
+
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                 f'€{height:.2f}',
+                 ha='center', va='bottom')
+
+    plt.tight_layout()
+    plt.savefig('analysis_results/product4_weekday.png')
+    plt.close()
+
+    # Time series decomposition
+    daily_sales = df_p4.groupby('Datum')['Umsatz'].sum().reset_index()
+    daily_sales.set_index('Datum', inplace=True)
+
+    # Calculate rolling statistics
+    rolling_mean = daily_sales['Umsatz'].rolling(window=7).mean()
+    rolling_std = daily_sales['Umsatz'].rolling(window=7).std()
+
+    plt.figure(figsize=(15, 7))
+    plt.plot(daily_sales.index,
+             daily_sales['Umsatz'], label='Daily Sales', alpha=0.5)
+    plt.plot(daily_sales.index, rolling_mean,
+             label='7-day Moving Average', linewidth=2)
+    plt.fill_between(daily_sales.index,
+                     rolling_mean - rolling_std,
+                     rolling_mean + rolling_std,
+                     alpha=0.2, label='±1 STD Range')
+    plt.title('Product 4: Daily Sales with Rolling Statistics')
+    plt.xlabel('Date')
+    plt.ylabel('Turnover (€)')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('analysis_results/product4_time_series.png')
+    plt.close()
+
+    # Weather impact analysis
+    weather_impact = pd.DataFrame()
+    weather_cols = [col for col in df_p4.columns if col.startswith('weather_')]
+
+    for weather in weather_cols:
+        weather_stats = df_p4[df_p4[weather] == 1]['Umsatz'].agg([
+            'mean', 'std', 'count', 'median'
+        ]).round(2)
+        weather_impact = pd.concat(
+            [weather_impact, weather_stats.to_frame(weather)], axis=1)
+
+    # Temperature analysis
+    temp_correlation = df_p4['Umsatz'].corr(df_p4['Temperatur'])
+
+    # Create temperature bins and analyze sales
+    df_p4['temp_bin'] = pd.cut(df_p4['Temperatur'],
+                               bins=[-float('inf'), 5, 10, 15,
+                                     20, 25, float('inf')],
+                               labels=['<5°C', '5-10°C', '10-15°C', '15-20°C', '20-25°C', '>25°C'])
+
+    temp_stats = df_p4.groupby('temp_bin', observed=True)['Umsatz'].agg([
+        'mean', 'std', 'count', 'median'
+    ]).round(2)
+
+    # Outlier analysis
+    Q1 = df_p4['Umsatz'].quantile(0.25)
+    Q3 = df_p4['Umsatz'].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    outliers = df_p4[(df_p4['Umsatz'] < lower_bound) |
+                     (df_p4['Umsatz'] > upper_bound)].copy()
+
+    # Calculate outlier dates and their characteristics
+    outlier_details = pd.DataFrame({
+        'date': outliers['Datum'],
+        'turnover': outliers['Umsatz'],
+        'weekday': outliers['Wochentag'],
+        'temperature': outliers['Temperatur'],
+        'is_holiday': outliers['is_holiday']
+    }).sort_values('turnover', ascending=False)
+
+    # Holiday analysis
+    holiday_impact = pd.DataFrame({
+        'Regular_Days': df_p4[df_p4['is_holiday'] == 0]['Umsatz'].mean(),
+        'Holidays': df_p4[df_p4['is_holiday'] == 1]['Umsatz'].mean(),
+        'Pre_Holidays': df_p4[df_p4['is_pre_holiday'] == 1]['Umsatz'].mean()
+    }, index=['Average_Turnover'])
+
+    # Save all results
+    monthly_stats.to_csv('analysis_results/product4_monthly_stats.csv')
+    dow_stats.to_csv('analysis_results/product4_weekday_stats.csv')
+    weather_impact.to_csv('analysis_results/product4_weather_impact.csv')
+    temp_stats.to_csv('analysis_results/product4_temperature_stats.csv')
+    outlier_details.to_csv('analysis_results/product4_outliers.csv')
+    holiday_impact.to_csv('analysis_results/product4_holiday_impact.csv')
+
+    # Create a summary dictionary
+    summary_stats = {
+        'basic_stats': basic_stats,
+        'monthly_stats': monthly_stats,
+        'dow_stats': dow_stats,
+        'weather_impact': weather_impact,
+        'temp_correlation': temp_correlation,
+        'temp_stats': temp_stats,
+        'outliers_count': len(outliers),
+        'outlier_percentage': round((len(outliers) / len(df_p4) * 100), 2),
+        'holiday_impact': holiday_impact
+    }
+
+    # Create a text summary
+    with open('analysis_results/product4_summary.txt', 'w') as f:
+        f.write("=== Product 4 Analysis Summary ===\n\n")
+        f.write(f"Total days analyzed: {len(df_p4)}\n")
+        f.write(f"Average daily turnover: €{basic_stats['mean']:.2f}\n")
+        f.write(f"Median daily turnover: €{basic_stats['50%']:.2f}\n")
+        f.write(f"Standard deviation: €{basic_stats['std']:.2f}\n")
+        f.write(f"Temperature correlation: {temp_correlation:.3f}\n")
+        f.write(f"Number of outliers: {len(outliers)} ({
+                (len(outliers)/len(df_p4)*100):.1f}%)\n")
+        f.write(f"\nBest performing month: {
+                monthly_stats['mean'].idxmax()} (€{monthly_stats['mean'].max():.2f})\n")
+        f.write(f"Worst performing month: {
+                monthly_stats['mean'].idxmin()} (€{monthly_stats['mean'].min():.2f})\n")
+
+    return summary_stats
+
 def analyze_product_6(df):
     """Detailed analysis for Product 6 with seasonal focus"""
     df_p6 = df[df['Warengruppe'] == 6].copy()
@@ -381,6 +552,8 @@ def main():
 
     print("Analyzing Product 6 (Seasonal Bread)...")
     analyze_product_6(df)
+    
+    analyze_product_4(df)
 
     print("Creating summary report...")
     create_summary_report(df)

@@ -56,29 +56,8 @@ def create_product_features(df):
                       'KielerWoche', 'is_nye', 'is_christmas_eve', 'is_weekend_holiday', 'is_pre_holiday']
 
     all_features = []
-    
-    df_with_features['is_seasonal_bread'] = ((df_with_features['Warengruppe'] == 6) &
-                                             df_with_features['Datum'].dt.month.isin([10, 11, 12, 1])).astype(int)
 
-    df_with_features['seasonal_bread_intensity'] = 0.0
-    seasonal_bread = df_with_features['is_seasonal_bread'] == 1
-
-    # Assign intensity values based on the sales pattern
-    df_with_features.loc[seasonal_bread & (
-        # October
-        df_with_features['Datum'].dt.month == 10), 'seasonal_bread_intensity'] = 0.5
-    df_with_features.loc[seasonal_bread & (
-        # November (peak)
-        df_with_features['Datum'].dt.month == 11), 'seasonal_bread_intensity'] = 1.0
-    df_with_features.loc[seasonal_bread & (
-        # December (peak)
-        df_with_features['Datum'].dt.month == 12), 'seasonal_bread_intensity'] = 1.2
-    df_with_features.loc[seasonal_bread & (
-        # January
-        df_with_features['Datum'].dt.month == 1), 'seasonal_bread_intensity'] = 0.4
-
-    all_features.extend(['is_seasonal_bread', 'seasonal_bread_intensity'])
-
+    # Temperature polynomials
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
     temp_features = temp_poly.fit_transform(df_with_features[['Temperatur']])
     feature_names = ['Temp', 'Temp2', 'Temp3']
@@ -87,9 +66,15 @@ def create_product_features(df):
         df_with_features[name] = temp_features[:, i]
         all_features.append(name)
 
-    df_with_features['Temp_Cloud'] = df_with_features['Temperatur'] * \
+    for i, name in enumerate(feature_names):
+        df_with_features[f'{name}_Cloud'] = temp_features[:,
+                                                          i] * df_with_features['Bewoelkung']
+    all_features.append(f'{name}_Cloud')
+
+    # Weather interactions
+    """ df_with_features['Temp_Cloud'] = df_with_features['Temperatur'] * \
         df_with_features['Bewoelkung']
-    all_features.append('Temp_Cloud')
+    all_features.append('Temp_Cloud') """
 
     all_features.extend(weekday_dummies)
     all_features.extend(month_dummies)
@@ -97,17 +82,29 @@ def create_product_features(df):
     all_features.extend(weather_codes)
     all_features.extend(wind_features)
 
+    # Product-specific features
     for product_id in range(1, 7):
         product_col = f'is_product_{product_id}'
         df_with_features[product_col] = (
             df_with_features['Warengruppe'] == product_id).astype(int)
         all_features.append(product_col)
 
+        # Regular product features
         for weather in weather_features:
             col_name = f'{weather}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * \
                 df_with_features[weather]
             all_features.append(col_name)
+
+        # Add Temp_Cloud interaction
+        """ col_name = f'Temp_Cloud_product_{product_id}'
+        df_with_features[col_name] = df_with_features[product_col] * \
+            df_with_features['Temp_Cloud']
+        all_features.append(col_name) """
+        col_name_cloud = f'{name}_Cloud_product_{product_id}'
+        df_with_features[col_name_cloud] = temp_features[:, i] * \
+            df_with_features['Bewoelkung'] * df_with_features[product_col]
+        all_features.append(col_name_cloud)
 
         for weather_code in weather_codes:
             col_name = f'{weather_code}_product_{product_id}'

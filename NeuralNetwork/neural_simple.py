@@ -73,10 +73,15 @@ def create_product_features(df):
         df_with_features[name] = temp_features[:, i]
         all_features.append(name)
 
+    for i, name in enumerate(feature_names):
+        df_with_features[f'{name}_Cloud'] = temp_features[:,
+                                                          i] * df_with_features['Bewoelkung']
+    all_features.append(f'{name}_Cloud')
+
     # Weather interactions
-    df_with_features['Temp_Cloud'] = df_with_features['Temperatur'] * \
+    """ df_with_features['Temp_Cloud'] = df_with_features['Temperatur'] * \
         df_with_features['Bewoelkung']
-    all_features.append('Temp_Cloud')
+    all_features.append('Temp_Cloud') """
 
     all_features.extend(weekday_dummies)
     all_features.extend(month_dummies)
@@ -91,59 +96,22 @@ def create_product_features(df):
             df_with_features['Warengruppe'] == product_id).astype(int)
         all_features.append(product_col)
 
-        # Add seasonal bread feature for Product 6
-        if product_id == 6:
-            df_with_features['is_seasonal_bread'] = ((df_with_features['Warengruppe'] == 6) &
-                                                     df_with_features['Datum'].dt.month.isin([10, 11, 12, 1])).astype(int)
-            all_features.append('is_seasonal_bread')
-
-            # Weather effects for seasonal bread
-            for weather in weather_features:
-                col_name = f'{weather}_seasonal_bread'
-                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
-                    df_with_features[weather]
-                all_features.append(col_name)
-
-            # Weather code effects for seasonal bread
-            for weather_code in weather_codes:
-                col_name = f'{weather_code}_seasonal_bread'
-                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
-                    df_with_features[weather_code]
-                all_features.append(col_name)
-
-            # Wind effects for seasonal bread
-            for wind in wind_features:
-                col_name = f'{wind}_seasonal_bread'
-                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
-                    df_with_features[wind]
-                all_features.append(col_name)
-
-            # Time effects for seasonal bread
-            for time in time_features:
-                col_name = f'{time}_seasonal_bread'
-                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
-                    df_with_features[time]
-                all_features.append(col_name)
-
-            # Event effects for seasonal bread
-            for event in event_features:
-                col_name = f'{event}_seasonal_bread'
-                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
-                    df_with_features[event]
-                all_features.append(col_name)
-
-            # Temperature polynomial interaction for seasonal bread
-            col_name = f'Temp2_seasonal_bread'
-            df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
-                df_with_features['Temp2']
-            all_features.append(col_name)
-
         # Regular product features
         for weather in weather_features:
             col_name = f'{weather}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * \
                 df_with_features[weather]
             all_features.append(col_name)
+
+        # Add Temp_Cloud interaction
+        """ col_name = f'Temp_Cloud_product_{product_id}'
+        df_with_features[col_name] = df_with_features[product_col] * \
+            df_with_features['Temp_Cloud']
+        all_features.append(col_name) """
+        col_name_cloud = f'{name}_Cloud_product_{product_id}'
+        df_with_features[col_name_cloud] = temp_features[:, i] * \
+            df_with_features['Bewoelkung'] * df_with_features[product_col]
+        all_features.append(col_name_cloud)
 
         for weather_code in weather_codes:
             col_name = f'{weather_code}_product_{product_id}'
@@ -175,7 +143,6 @@ def create_product_features(df):
         all_features.append(col_name)
 
     return df_with_features, all_features
-
 
 
 def plot_history(history, product_metrics):
@@ -249,7 +216,7 @@ def prepare_and_predict_umsatz_nn(df):
         Dense(128, activation='relu', input_shape=(len(feature_columns),),
               kernel_regularizer=l2(0.01)),
         BatchNormalization(),
-        Dropout(0.3),
+        Dropout(0.34),
         Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
         Dropout(0.30),
         Dense(32, activation='relu', kernel_regularizer=l2(0.01)),
@@ -258,7 +225,7 @@ def prepare_and_predict_umsatz_nn(df):
     ])
 
     # model.compile(optimizer=Adam(learning_rate=0.000665),
-    model.compile(optimizer=Adam(learning_rate=0.000576),
+    model.compile(optimizer=Adam(learning_rate=0.000550),
                   loss='mse',
                   metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 

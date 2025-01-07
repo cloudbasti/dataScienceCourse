@@ -62,12 +62,38 @@ def prepare_features(df):
 
     # for the wind the analysis many data is in moderate wind, so this might also be split to
     # a finer accuracy
-    df_prepared['wind_calm'] = (
+    """ df_prepared['wind_calm'] = (
         df_prepared['Windgeschwindigkeit'] < 5).astype(int)
     df_prepared['wind_moderate'] = ((df_prepared['Windgeschwindigkeit'] >= 5) &
                                     (df_prepared['Windgeschwindigkeit'] < 15)).astype(int)
     df_prepared['wind_strong'] = (
-        df_prepared['Windgeschwindigkeit'] >= 15).astype(int)
+        df_prepared['Windgeschwindigkeit'] >= 15).astype(int) """
+    df_prepared['wind_0_5'] = (
+        (df_prepared['Windgeschwindigkeit'] >= 0) &
+        (df_prepared['Windgeschwindigkeit'] < 5)).astype(int)
+
+    df_prepared['wind_5_10'] = (
+        (df_prepared['Windgeschwindigkeit'] >= 5) &
+        (df_prepared['Windgeschwindigkeit'] < 10)).astype(int)
+
+    df_prepared['wind_10_15'] = (
+        (df_prepared['Windgeschwindigkeit'] >= 10) &
+        (df_prepared['Windgeschwindigkeit'] < 15)).astype(int)
+
+    df_prepared['wind_15_20'] = (
+        (df_prepared['Windgeschwindigkeit'] >= 15) &
+        (df_prepared['Windgeschwindigkeit'] < 20)).astype(int)
+
+    df_prepared['wind_20_25'] = (
+        (df_prepared['Windgeschwindigkeit'] >= 20) &
+        (df_prepared['Windgeschwindigkeit'] < 25)).astype(int)
+
+    df_prepared['wind_25_30'] = (
+        (df_prepared['Windgeschwindigkeit'] >= 25) &
+        (df_prepared['Windgeschwindigkeit'] < 30)).astype(int)
+
+    df_prepared['wind_above_30'] = (
+        df_prepared['Windgeschwindigkeit'] >= 30).astype(int)
 
     # New Year's Eve (highest turnover days)
     df_prepared['is_nye'] = (df_prepared['Datum'].dt.month == 12) & (
@@ -203,12 +229,6 @@ def merge_datasets():
     kiwo['Datum'] = pd.to_datetime(kiwo['Datum'])
     school_holidays['Datum'] = pd.to_datetime(school_holidays['Datum'])
     public_holidays['Datum'] = pd.to_datetime(public_holidays['Datum'])
-
-    # Find start and end dates from turnover data
-    start_date = turnover['Datum'].min()
-    end_date = turnover['Datum'].max()
-
-    # print(f"Turnover data ranges from {start_date} to {end_date}")
 
     # Merge weather and turnover first
     df = pd.merge(turnover, weather, on='Datum', how='left')

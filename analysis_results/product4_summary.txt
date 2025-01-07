@@ -1,0 +1,11 @@
+=== Product 4 Analysis Summary ===
+
+Total days analyzed: 1763
+Average daily turnover: €87.93
+Median daily turnover: €79.95
+Standard deviation: €35.33
+Temperature correlation: -0.117
+Number of outliers: 120 (6.8%)
+
+Best performing month: 2 (€124.20)
+Worst performing month: 6 (€74.18)
