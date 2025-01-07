@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
 
 
 def add_time_series_features(df):
@@ -29,28 +28,6 @@ def add_time_series_features(df):
     return df_with_lags
 
 
-def add_seasonal_product6_features(df):
-    mask = df['Warengruppe'] == 6
-
-    # Basic season flag (Oct-Jan)
-    df.loc[mask, 'p6_is_season'] = df.loc[mask,
-                                          'Datum'].dt.month.isin([10, 11, 12, 1]).astype(int)
-
-    # Seasonal intensity (peak in December)
-    df.loc[mask, 'p6_season_intensity'] = 0
-    seasonal_mask = mask & df['p6_is_season'].astype(bool)
-    df.loc[seasonal_mask & (df['Datum'].dt.month == 10),
-           'p6_season_intensity'] = 0.3  # Season start
-    df.loc[seasonal_mask & (df['Datum'].dt.month == 11),
-           'p6_season_intensity'] = 0.7  # Building up
-    df.loc[seasonal_mask & (df['Datum'].dt.month == 12),
-           'p6_season_intensity'] = 1.0  # Peak
-    df.loc[seasonal_mask & (df['Datum'].dt.month == 1),
-           'p6_season_intensity'] = 0.4   # Winding down
-
-    return df
-
-
 def prepare_features(df):
     df_prepared = df.copy()
 
@@ -58,12 +35,6 @@ def prepare_features(df):
     df_prepared['Datum'] = pd.to_datetime(df_prepared['Datum'])
 
     df_prepared = add_time_series_features(df_prepared)
-
-    # Clean weather codes
-    df_prepared['Wettercode'] = pd.to_numeric(
-        df_prepared['Wettercode'], errors='coerce')
-    mask = (df_prepared['Wettercode'] >= 0) & (df_prepared['Wettercode'] <= 99)
-    print(f"Invalid weather codes removed: {(~mask).sum()}")
 
     # for the weather also the most frequent ones might need to get their own features.
 
@@ -89,12 +60,6 @@ def prepare_features(df):
     df_prepared['weather_thunderstorm'] = df_prepared['Wettercode'].between(
         91, 99, inclusive='both').astype(int)
 
-    # Print distribution of weather categories
-    print("\nWeather category distribution:")
-    for col in df_prepared.filter(like='weather_').columns:
-        count = df_prepared[col].sum()
-        pct = (count / len(df_prepared)) * 100
-        print(f"{col}: {count} occurrences ({pct:.2f}%)")
 
     # for the wind the analysis many data is in moderate wind, so this might also be split to
     # a finer accuracy
@@ -119,32 +84,6 @@ def prepare_features(df):
     df_prepared['is_last_day_of_month'] = df_prepared['Datum'].dt.is_month_end
     df_prepared['is_last_day_of_month'] = df_prepared['is_last_day_of_month'].fillna(
         0)
-
-    # Pre-holiday indicator (day before holidays)
-    # df_prepared['is_pre_holiday'] = df_prepared['Datum'].shift(-1).isin(df_prepared[df_prepared['is_holiday'] == 1]['Datum'])
-
-    # Weekend + Holiday combination
-    # df_prepared['is_weekend_holiday'] = (df_prepared['is_weekend'] == 'Weekend') & (df_prepared['is_holiday'] == 1)
-
-    """ df_prepared['weather_ideal'] = df_prepared['Wettercode'].isin([0, 1, 2, 3]).astype(int)  # Perfect shopping weather, clear/stable conditions
-
-    df_prepared['weather_uncomfortable'] = df_prepared['Wettercode'].isin([4, 5, 6, 7, 8, 9]).astype(int)  # Conditions that make shopping less pleasant (dust, smoke, haze)
-
-    df_prepared['weather_light_rain'] = df_prepared['Wettercode'].isin([50, 51, 52, 60, 61, 62]).astype(int)  # Light rain/drizzle that might affect walking customers
-
-    df_prepared['weather_heavy_rain'] = df_prepared['Wettercode'].isin([63, 64, 65, 81, 82]).astype(int)  # Heavy rain likely to reduce shopping
-
-    df_prepared['weather_visibility_poor'] = df_prepared['Wettercode'].isin(range(40, 50)).astype(int)  # Fog and visibility issues
-
-    df_prepared['weather_severe'] = df_prepared['Wettercode'].isin([91, 92, 93, 94, 95, 96, 97, 98, 99]).astype(int)  # Thunderstorms and severe conditions
-
-    df_prepared['weather_recent_rain'] = df_prepared['Wettercode'].isin([20, 21, 25]).astype(int)  # Recent rain that might still affect shopping behavior  
-
-    df_prepared['weather_snow_related'] = df_prepared['Wettercode'].isin(range(70, 80)).astype(int)  # Snow and related conditions that might limit mobility
-
-    df_prepared['weather_humid_muggy'] = df_prepared['Wettercode'].isin([10, 11, 12]).astype(int)  # Humid/muggy conditions that might affect comfort
-
-    df_prepared['weather_wind_issues'] = df_prepared['Wettercode'].isin([18, 30, 31, 32, 33, 34, 35]).astype(int)  # Wind-related conditions that might deter shoppers """
 
     # Create weekday name and dummies
     df_prepared['Wochentag'] = df_prepared['Datum'].dt.day_name()
@@ -213,22 +152,11 @@ def prepare_features(df):
                                              (df_prepared['is_weekend'] == 'Weekend')).astype(int)
     df_prepared['is_peak_summer_weekend'] = df_prepared['is_peak_summer_weekend'].fillna(
         0)
-    
-    """ df_prepared = add_seasonal_product6_features(df_prepared) """
 
     return df_prepared
 
 
 def handle_missing_values(df):
-    """
-    Remove rows with missing values in key columns and save removed rows to a CSV file.
-
-    Parameters:
-    df (pandas.DataFrame): Input dataframe
-
-    Returns:
-    pandas.DataFrame: Dataframe with rows containing missing values removed
-    """
     df_cleaned = df.copy()
 
     # Define columns to check for missing values
@@ -297,48 +225,8 @@ def merge_datasets():
     df['is_school_holiday'] = df['is_school_holiday'].fillna(0)
     df['is_holiday'] = df['is_holiday'].fillna(0)
 
-    # print(df.head())
-
-    # Filter data to only include dates within the turnover date range
-    # not needed if doing left joins
-    # df = df[(df['Datum'] >= start_date) & (df['Datum'] <= end_date)]
 
     df.to_csv("data/merged_data.csv", index=False)
 
-    # here are all rows removed from the final merged dataframe for which no turnover data
-    # was available from the very beginning. Its not necessary to handle missing values for this
-    # later anyways if the data didnt exist.
-
     return df
 
-
-def analyze_weather_codes(df):
-    print("Weather code distribution:")
-    print(df['Wettercode'].value_counts().sort_index())
-    print("\nMissing values:", df['Wettercode'].isnull().sum())
-    print("\nUnique codes:", len(df['Wettercode'].unique()))
-
-
-def analyze_wind_data(df):
-    print("\nWind Speed Analysis:")
-    print("\nBasic Statistics:")
-    print(df['Windgeschwindigkeit'].describe())
-
-    print("\nValue Distribution:")
-    wind_dist = df['Windgeschwindigkeit'].value_counts().sort_index()
-    print(wind_dist)
-
-    print("\nDistribution by Categories:")
-    calm = (df['Windgeschwindigkeit'] < 5).sum()
-    moderate = ((df['Windgeschwindigkeit'] >= 5) &
-                (df['Windgeschwindigkeit'] < 15)).sum()
-    strong = (df['Windgeschwindigkeit'] >= 15).sum()
-
-    total = len(df)
-    print(f"Calm Wind (<5): {calm} occurrences ({(calm/total*100):.2f}%)")
-    print(
-        f"Moderate Wind (5-15): {moderate} occurrences ({(moderate/total*100):.2f}%)")
-    print(f"Strong Wind (>=15): {
-          strong} occurrences ({(strong/total*100):.2f}%)")
-
-    print("\nMissing values:", df['Windgeschwindigkeit'].isnull().sum())

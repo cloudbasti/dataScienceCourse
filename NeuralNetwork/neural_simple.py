@@ -64,35 +64,6 @@ def create_product_features(df):
 
     all_features = []
 
-    df_with_features['Datum'] = pd.to_datetime(
-        df_with_features['Datum'], errors='coerce')
-    df_with_features['is_seasonal_bread'] = ((df_with_features['Warengruppe'] == 6) &
-                                             df_with_features['Datum'].dt.month.isin([10, 11, 12, 1])).astype(int)
-
-    df_with_features['seasonal_bread_intensity'] = 0.0
-    seasonal_bread = df_with_features['is_seasonal_bread'] == 1
-
-    # Assign intensity values based on the sales pattern
-    df_with_features.loc[seasonal_bread & (
-        # October
-        df_with_features['Datum'].dt.month == 10), 'seasonal_bread_intensity'] = 0.5
-    df_with_features.loc[seasonal_bread & (
-        # November (peak)
-        df_with_features['Datum'].dt.month == 11), 'seasonal_bread_intensity'] = 1.0
-    df_with_features.loc[seasonal_bread & (
-        # December (peak)
-        df_with_features['Datum'].dt.month == 12), 'seasonal_bread_intensity'] = 1.2
-    df_with_features.loc[seasonal_bread & (
-        # January
-        df_with_features['Datum'].dt.month == 1), 'seasonal_bread_intensity'] = 0.4
-
-    all_features.extend(['is_seasonal_bread', 'seasonal_bread_intensity'])
-
-    """ product6_features = ['p6_is_season', 'p6_season_intensity']
-    mask_p6 = df_with_features['Warengruppe'] == 6
-    if mask_p6.any():
-        all_features.extend(product6_features)
- """
     # Temperature polynomials
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
     temp_features = temp_poly.fit_transform(df_with_features[['Temperatur']])
@@ -120,35 +91,78 @@ def create_product_features(df):
             df_with_features['Warengruppe'] == product_id).astype(int)
         all_features.append(product_col)
 
-        # Weather effects
+        # Add seasonal bread feature for Product 6
+        if product_id == 6:
+            df_with_features['is_seasonal_bread'] = ((df_with_features['Warengruppe'] == 6) &
+                                                     df_with_features['Datum'].dt.month.isin([10, 11, 12, 1])).astype(int)
+            all_features.append('is_seasonal_bread')
+
+            # Weather effects for seasonal bread
+            for weather in weather_features:
+                col_name = f'{weather}_seasonal_bread'
+                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
+                    df_with_features[weather]
+                all_features.append(col_name)
+
+            # Weather code effects for seasonal bread
+            for weather_code in weather_codes:
+                col_name = f'{weather_code}_seasonal_bread'
+                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
+                    df_with_features[weather_code]
+                all_features.append(col_name)
+
+            # Wind effects for seasonal bread
+            for wind in wind_features:
+                col_name = f'{wind}_seasonal_bread'
+                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
+                    df_with_features[wind]
+                all_features.append(col_name)
+
+            # Time effects for seasonal bread
+            for time in time_features:
+                col_name = f'{time}_seasonal_bread'
+                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
+                    df_with_features[time]
+                all_features.append(col_name)
+
+            # Event effects for seasonal bread
+            for event in event_features:
+                col_name = f'{event}_seasonal_bread'
+                df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
+                    df_with_features[event]
+                all_features.append(col_name)
+
+            # Temperature polynomial interaction for seasonal bread
+            col_name = f'Temp2_seasonal_bread'
+            df_with_features[col_name] = df_with_features['is_seasonal_bread'] * \
+                df_with_features['Temp2']
+            all_features.append(col_name)
+
+        # Regular product features
         for weather in weather_features:
             col_name = f'{weather}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * \
                 df_with_features[weather]
             all_features.append(col_name)
 
-        # Weather code effects
         for weather_code in weather_codes:
             col_name = f'{weather_code}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * \
                 df_with_features[weather_code]
             all_features.append(col_name)
 
-        # Wind effects
         for wind in wind_features:
             col_name = f'{wind}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * \
                 df_with_features[wind]
             all_features.append(col_name)
 
-        # Time effects
         for time in time_features:
             col_name = f'{time}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * \
                 df_with_features[time]
             all_features.append(col_name)
 
-        # Event effects
         for event in event_features:
             col_name = f'{event}_product_{product_id}'
             df_with_features[col_name] = df_with_features[product_col] * \
@@ -160,30 +174,8 @@ def create_product_features(df):
             df_with_features['Temp2']
         all_features.append(col_name)
 
-    """ if 6 in df_with_features['Warengruppe'].unique():
-        for feature in product6_features:
-            # Weather effects
-            for weather in weather_features:
-                col_name = f'{weather}_{feature}'
-                df_with_features[col_name] = df_with_features[feature] * \
-                    df_with_features[weather]
-                all_features.append(col_name)  # Moved inside the loop
-
-            # Weather code effects
-            for weather_code in weather_codes:
-                col_name = f'{weather_code}_{feature}'
-                df_with_features[col_name] = df_with_features[feature] * \
-                    df_with_features[weather_code]
-                all_features.append(col_name)  # Moved inside the loop
-
-            # Time effects
-            for time in time_features:
-                col_name = f'{time}_{feature}'
-                df_with_features[col_name] = df_with_features[feature] * \
-                    df_with_features[time]
-                all_features.append(col_name)  # Moved inside the loop """
-
     return df_with_features, all_features
+
 
 
 def plot_history(history, product_metrics):
@@ -266,7 +258,7 @@ def prepare_and_predict_umsatz_nn(df):
     ])
 
     # model.compile(optimizer=Adam(learning_rate=0.000665),
-    model.compile(optimizer=Adam(learning_rate=0.000665),
+    model.compile(optimizer=Adam(learning_rate=0.000576),
                   loss='mse',
                   metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 
@@ -304,7 +296,7 @@ def prepare_and_predict_umsatz_nn(df):
                 'RMSE': product_rmse,
                 'MAPE': product_mape}
 
-    return model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns, overall_mape
+    return r2, rmse, product_metrics, history, overall_mape
 
 
 def main():
@@ -314,10 +306,8 @@ def main():
     df_featured = prepare_features(df_imputed)
     df_cleaned = handle_missing_values(df_featured)
 
-    print("Product 6 features present:", [
-          col for col in df_cleaned.columns if 'p6_' in col])
     # Train model
-    model, r2, rmse, product_metrics, scaler_X, scaler_y, history, feature_columns, overall_mape = prepare_and_predict_umsatz_nn(
+    r2, rmse, product_metrics, history, overall_mape = prepare_and_predict_umsatz_nn(
         df_cleaned)
 
     # Print results

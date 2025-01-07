@@ -350,7 +350,7 @@ def analyze_product_6(df):
         'dow_stats': dow_stats,
         'temp_correlation': temp_corr
     }
-
+    
 
 def main():
     os.makedirs("analysis_results", exist_ok=True)
