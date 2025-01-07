@@ -60,7 +60,6 @@ def prepare_features(df):
     df_prepared['weather_thunderstorm'] = df_prepared['Wettercode'].between(
         91, 99, inclusive='both').astype(int)
 
-
     # for the wind the analysis many data is in moderate wind, so this might also be split to
     # a finer accuracy
     df_prepared['wind_calm'] = (
@@ -209,7 +208,7 @@ def merge_datasets():
     start_date = turnover['Datum'].min()
     end_date = turnover['Datum'].max()
 
-    print(f"Turnover data ranges from {start_date} to {end_date}")
+    # print(f"Turnover data ranges from {start_date} to {end_date}")
 
     # Merge weather and turnover first
     df = pd.merge(turnover, weather, on='Datum', how='left')
@@ -225,8 +224,6 @@ def merge_datasets():
     df['is_school_holiday'] = df['is_school_holiday'].fillna(0)
     df['is_holiday'] = df['is_holiday'].fillna(0)
 
-
     df.to_csv("data/merged_data.csv", index=False)
 
     return df
-

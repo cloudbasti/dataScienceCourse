@@ -28,7 +28,7 @@ def impute_data(df):
     df_imputed['month'] = df_imputed['Datum'].dt.month
 
     # Print initial analysis
-    print_missing_analysis(df_imputed, "Before imputation:")
+    # print_missing_analysis(df_imputed, "Before imputation:")
 
     # First handle Weather Codes
     print("\nStarting Weather Code imputation...")
@@ -82,7 +82,7 @@ def impute_data(df):
             df_imputed.loc[missing_mask, 'Wettercode'] = codes_to_insert
 
     # Print distributions before and after imputation
-    print("\nDistributions Before and After Weather Code Imputation:")
+    """ print("\nDistributions Before and After Weather Code Imputation:")
     for month in range(1, 13):
         print(f"\nMonth {month}:")
         print("-" * 60)
@@ -104,18 +104,18 @@ def impute_data(df):
         # Sort by 'After' values to maintain same order as your example
         comparison = comparison.sort_values('After', ascending=False)
 
-        print(comparison.head(5))
+        print(comparison.head(5)) """
 
     # Now handle Bewoelkung imputation
     print("\nStarting Bewoelkung imputation...")
 
     # Calculate median Bewoelkung and round to whole number
     median_bewoelkung = round(df_imputed['Bewoelkung'].median())
-    print(f"Median Bewoelkung value used for imputation: {median_bewoelkung}")
+    #print(f"Median Bewoelkung value used for imputation: {median_bewoelkung}")
 
     # Print Bewoelkung distribution before imputation
-    print("\nBewoelkung distribution before imputation:")
-    print(df_imputed['Bewoelkung'].describe())
+    """ print("\nBewoelkung distribution before imputation:")
+    print(df_imputed['Bewoelkung'].describe()) """
 
     # Count missing values before Bewoelkung imputation
     missing_before = df_imputed['Bewoelkung'].isna().sum()
@@ -125,17 +125,17 @@ def impute_data(df):
         median_bewoelkung)
 
     # Print Bewoelkung distribution after imputation
-    print("\nBewoelkung distribution after imputation:")
-    print(df_imputed['Bewoelkung'].describe())
+    """ print("\nBewoelkung distribution after imputation:")
+    print(df_imputed['Bewoelkung'].describe()) """
 
     # Count missing values after imputation
-    missing_after = df_imputed['Bewoelkung'].isna().sum()
-    print(f"\nNumber of Bewoelkung values imputed: {
-          missing_before - missing_after}")
+    #missing_after = df_imputed['Bewoelkung'].isna().sum()
+    """ print(f"\nNumber of Bewoelkung values imputed: {
+          missing_before - missing_after}") """
 
     # Print final analysis after both imputations
-    print("\nAfter both Weather Code and Bewoelkung imputation:")
-    print_missing_analysis(df_imputed)
+    #print("\nAfter both Weather Code and Bewoelkung imputation:")
+    #print_missing_analysis(df_imputed)
 
     # Remove the month column before saving
     df_imputed = df_imputed.drop('month', axis=1)
