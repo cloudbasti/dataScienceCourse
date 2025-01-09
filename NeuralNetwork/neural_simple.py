@@ -62,7 +62,14 @@ def create_product_features(df):
     event_features = ['is_holiday', 'is_school_holiday', 'is_last_day_of_month', 'is_december_weekend', 'is_june_weekend',
                       'KielerWoche', 'is_nye', 'is_christmas_eve', 'is_weekend_holiday', 'is_pre_holiday']
 
+    # Get lag features
+    lag_features = [col for col in df_with_features.columns
+                    if ('turnover_lag' in col or 'same_weekday_lag' in col)]
+    print("Total lag features found:", len(lag_features))
+    print("Sample lag features:", lag_features[:5])
+
     all_features = []
+    all_features.extend(lag_features)  # Add base lag features
 
     # Temperature polynomials
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
@@ -76,12 +83,7 @@ def create_product_features(df):
     for i, name in enumerate(feature_names):
         df_with_features[f'{name}_Cloud'] = temp_features[:,
                                                           i] * df_with_features['Bewoelkung']
-    all_features.append(f'{name}_Cloud')
-
-    # Weather interactions
-    """ df_with_features['Temp_Cloud'] = df_with_features['Temperatur'] * \
-        df_with_features['Bewoelkung']
-    all_features.append('Temp_Cloud') """
+        all_features.append(f'{name}_Cloud')
 
     all_features.extend(weekday_dummies)
     all_features.extend(month_dummies)
@@ -103,11 +105,33 @@ def create_product_features(df):
                 df_with_features[weather]
             all_features.append(col_name)
 
-        # Add Temp_Cloud interaction
-        """ col_name = f'Temp_Cloud_product_{product_id}'
-        df_with_features[col_name] = df_with_features[product_col] * \
-            df_with_features['Temp_Cloud']
-        all_features.append(col_name) """
+        # Add lag feature interactions for this product
+        product_lags = [
+            lag for lag in lag_features if f'group_{product_id}' in lag]
+        print(f"\nProduct {product_id} lag features:", len(product_lags))
+        print("Sample:", product_lags[:2] if product_lags else "None")
+        for lag in product_lags:
+            # Interaction with weather features
+            for weather in weather_features:
+                col_name = f'{lag}_{weather}'
+                df_with_features[col_name] = df_with_features[lag] * \
+                    df_with_features[weather]
+                all_features.append(col_name)
+
+            # Interaction with weather codes
+            for weather_code in weather_codes:
+                col_name = f'{lag}_{weather_code}'
+                df_with_features[col_name] = df_with_features[lag] * \
+                    df_with_features[weather_code]
+                all_features.append(col_name)
+
+            # Interaction with events
+            for event in event_features:
+                col_name = f'{lag}_{event}'
+                df_with_features[col_name] = df_with_features[lag] * \
+                    df_with_features[event]
+                all_features.append(col_name)
+
         col_name_cloud = f'{name}_Cloud_product_{product_id}'
         df_with_features[col_name_cloud] = temp_features[:, i] * \
             df_with_features['Bewoelkung'] * df_with_features[product_col]
@@ -225,7 +249,7 @@ def prepare_and_predict_umsatz_nn(df):
     ])
 
     # model.compile(optimizer=Adam(learning_rate=0.000665),
-    model.compile(optimizer=Adam(learning_rate=0.000550),
+    model.compile(optimizer=Adam(learning_rate= 0.00023299518105153718,),
                   loss='mse',
                   metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 

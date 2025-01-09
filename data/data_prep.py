@@ -3,27 +3,53 @@ import numpy as np
 
 
 def add_time_series_features(df):
-    """
-    Add time series features (lagged values) for each product group's turnover.
-    """
     df_with_lags = df.copy()
     df_with_lags = df_with_lags.sort_values(['Datum', 'Warengruppe'])
 
     for product_group in df_with_lags['Warengruppe'].unique():
+        # Create mask for this product
         mask = df_with_lags['Warengruppe'] == product_group
+
+        # Get only this product's data
+        product_data = df_with_lags[mask].copy()
+
+        # Create lags only for this product's data
         for lag in range(1, 8):
             col_name = f'turnover_lag_{lag}_days_group_{product_group}'
-            df_with_lags.loc[mask, col_name] = df_with_lags.loc[mask, 'Umsatz'].shift(
-                lag)
+            product_data[col_name] = product_data['Umsatz'].shift(lag)
 
-    lag_columns = [
-        col for col in df_with_lags.columns if 'turnover_lag' in col]
-    for col in lag_columns:
-        product_group = int(col.split('_')[-1])
-        mask = df_with_lags['Warengruppe'] == product_group
-        mean_value = df_with_lags.loc[mask, col].mean()
-        df_with_lags.loc[mask, col] = df_with_lags.loc[mask,
-                                                       col].fillna(mean_value)
+        # Previous week same day
+        product_data[f'same_weekday_lag_group_{
+            product_group}'] = product_data['Umsatz'].shift(7)
+
+        # Special handling for Product 6 only
+        if product_group == 6:
+            # Add previous year same day (seasonal pattern)
+            product_data['last_year_lag_p6'] = product_data['Umsatz'].shift(
+                365)
+
+            # Add season indicator (Oct-Jan)
+            product_data['is_season_p6'] = product_data['Datum'].dt.month.isin(
+                [10, 11, 12, 1]).astype(int)
+
+            # Add these to lag columns for this product
+            lag_columns = [col for col in product_data.columns if 'lag' in col or col in [
+                'last_year_lag_p6', 'is_season_p6']]
+        else:
+            lag_columns = [col for col in product_data.columns if 'lag' in col]
+
+        # Fill NaN values with median for this product
+        for col in lag_columns:
+            product_data[col] = product_data[col].fillna(
+                product_data['Umsatz'].median())
+
+        # Update only this product's rows in the original dataframe
+        df_with_lags.loc[mask, lag_columns] = product_data[lag_columns]
+
+    # Any remaining NaN values should be 0 as they're for different products
+    lag_columns = [col for col in df_with_lags.columns if 'lag' in col or col in [
+        'last_year_lag_p6', 'is_season_p6']]
+    df_with_lags[lag_columns] = df_with_lags[lag_columns].fillna(0)
 
     return df_with_lags
 
