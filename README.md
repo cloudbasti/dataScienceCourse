@@ -1,5 +1,15 @@
 # dataScienceCourse
 
+# [Introduction to Machine Learning and Data Science]
+
+## Repository Link
+https://github.com/cloudbasti/dataScienceCourse
+
+
+## Description
+
+In dem Projekt sollen Umsatzdaten einer Bäckerei vorhergesagt werden, aufgrund von vergangenen Umsatzdaten verschiedener Produkte unter Hinzuziehung von Wetterdaten, Events wie Kieler Woche etc. Deshalb wird einmal eine lineare Regression genutzt und ein neuronales Netz um die Aufgabe zu lösen. 
+
 
 Aufbau:
 
@@ -25,8 +35,6 @@ Training und Validation Split
 Dieser Split wird von der Datei data/train_split.py gemacht. 
 
 Final Test Data und Wetter Imputation Flow: 
-
-Hier ist die Übersetzung des Datenverarbeitungsablaufs:
 
 # Der Verarbeitungsablauf
 
