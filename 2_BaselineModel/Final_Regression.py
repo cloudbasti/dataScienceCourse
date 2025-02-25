@@ -1,4 +1,3 @@
-
 import os
 import sys
 # from sklearn.metrics import r2_score, mean_squared_error
@@ -10,7 +9,7 @@ import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # from data.train_split import split_train_validation  # NOQA
 from data.data_prep import prepare_features, merge_datasets, handle_missing_values  # NOQA
-from data.data_prep import analyze_weather_codes, analyze_wind_data  # NOQA
+#from data.data_prep import analyze_weather_codes, analyze_wind_data  # NOQA
 
 
 def create_interaction_features(df):
@@ -105,8 +104,8 @@ def main():
     df_merged = merge_datasets()
 
     # Analyze weather codes distribution
-    analyze_weather_codes(df_merged)
-    analyze_wind_data(df_merged)
+    #analyze_weather_codes(df_merged)
+    #analyze_wind_data(df_merged)
 
     # Prepare features
     df_featured = prepare_features(df_merged)

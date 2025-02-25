@@ -88,13 +88,13 @@ def prepare_features(df):
 
     # for the wind the analysis many data is in moderate wind, so this might also be split to
     # a finer accuracy
-    """ df_prepared['wind_calm'] = (
+    df_prepared['wind_calm'] = (
         df_prepared['Windgeschwindigkeit'] < 5).astype(int)
     df_prepared['wind_moderate'] = ((df_prepared['Windgeschwindigkeit'] >= 5) &
                                     (df_prepared['Windgeschwindigkeit'] < 15)).astype(int)
     df_prepared['wind_strong'] = (
-        df_prepared['Windgeschwindigkeit'] >= 15).astype(int) """
-    df_prepared['wind_0_5'] = (
+        df_prepared['Windgeschwindigkeit'] >= 15).astype(int) 
+    '''df_prepared['wind_0_5'] = (
         (df_prepared['Windgeschwindigkeit'] >= 0) &
         (df_prepared['Windgeschwindigkeit'] < 5)).astype(int)
 
@@ -119,7 +119,7 @@ def prepare_features(df):
         (df_prepared['Windgeschwindigkeit'] < 30)).astype(int)
 
     df_prepared['wind_above_30'] = (
-        df_prepared['Windgeschwindigkeit'] >= 30).astype(int)
+        df_prepared['Windgeschwindigkeit'] >= 30).astype(int)'''
 
     # New Year's Eve (highest turnover days)
     df_prepared['is_nye'] = (df_prepared['Datum'].dt.month == 12) & (
