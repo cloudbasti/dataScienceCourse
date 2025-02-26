@@ -240,16 +240,16 @@ def prepare_and_predict_umsatz_nn(df):
         Dense(128, activation='relu', input_shape=(len(feature_columns),),
               kernel_regularizer=l2(0.01)),
         BatchNormalization(),
-        Dropout(0.34),
+        Dropout(0.30),
         Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
         Dropout(0.30),
         Dense(32, activation='relu', kernel_regularizer=l2(0.01)),
-        Dropout(0.17),
+        Dropout(0.12),
         Dense(1)
     ])
 
     # model.compile(optimizer=Adam(learning_rate=0.000665),
-    model.compile(optimizer=Adam(learning_rate= 0.00023299518105153718,),
+    model.compile(optimizer=Adam(learning_rate= 0.0008),
                   loss='mse',
                   metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 
