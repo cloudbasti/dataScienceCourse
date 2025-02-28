@@ -63,13 +63,13 @@ def create_product_features(df):
                       'KielerWoche', 'is_nye', 'is_christmas_eve', 'is_weekend_holiday', 'is_pre_holiday']
 
     # Get lag features
-    lag_features = [col for col in df_with_features.columns
+    '''lag_features = [col for col in df_with_features.columns
                     if ('turnover_lag' in col or 'same_weekday_lag' in col)]
     print("Total lag features found:", len(lag_features))
-    print("Sample lag features:", lag_features[:5])
-
+    print("Sample lag features:", lag_features[:5])'''
+    
     all_features = []
-    all_features.extend(lag_features)  # Add base lag features
+    #all_features.extend(lag_features)  # Add base lag features
 
     # Temperature polynomials
     temp_poly = PolynomialFeatures(degree=3, include_bias=False)
@@ -106,7 +106,7 @@ def create_product_features(df):
             all_features.append(col_name)
 
         # Add lag feature interactions for this product
-        product_lags = [
+        '''product_lags = [
             lag for lag in lag_features if f'group_{product_id}' in lag]
         print(f"\nProduct {product_id} lag features:", len(product_lags))
         print("Sample:", product_lags[:2] if product_lags else "None")
@@ -130,7 +130,7 @@ def create_product_features(df):
                 col_name = f'{lag}_{event}'
                 df_with_features[col_name] = df_with_features[lag] * \
                     df_with_features[event]
-                all_features.append(col_name)
+                all_features.append(col_name)'''
 
         col_name_cloud = f'{name}_Cloud_product_{product_id}'
         df_with_features[col_name_cloud] = temp_features[:, i] * \
@@ -249,7 +249,7 @@ def prepare_and_predict_umsatz_nn(df):
     ])
 
     # model.compile(optimizer=Adam(learning_rate=0.000665),
-    model.compile(optimizer=Adam(learning_rate= 0.0008),
+    model.compile(optimizer=Adam(learning_rate=  0.000587),
                   loss='mse',
                   metrics=['mae', tf.keras.metrics.MeanAbsolutePercentageError()])
 
