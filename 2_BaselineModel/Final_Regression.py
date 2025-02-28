@@ -8,7 +8,7 @@ import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # from data.train_split import split_train_validation  # NOQA
-from data.data_prep import prepare_features, merge_datasets, handle_missing_values  # NOQA
+from data.TrainingPreparation.data_prep import prepare_features, merge_datasets, handle_missing_values  # NOQA
 #from data.data_prep import analyze_weather_codes, analyze_wind_data  # NOQA
 
 
@@ -117,11 +117,11 @@ def main():
     model, scaler, feature_columns = prepare_and_predict_umsatz(df_cleaned)
 
     # Load and predict on test data
-    test_df = pd.read_csv("data/test_final.csv")
+    test_df = pd.read_csv("data/SubmissionPreparation/test_data_final_after_imputation.csv")
     predictions_df = predict_test_data(model, scaler, feature_columns, test_df)
 
     # Save predictions
-    predictions_df.to_csv("data/submission.csv", index=False)
+    predictions_df.to_csv("data/SubmissionFiles/Regression_Submission.csv", index=False)
     print("\nPredictions saved to submission.csv")
 
 

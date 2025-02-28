@@ -14,11 +14,11 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from data.data_prep import handle_missing_values  # NOQA
-from data.data_prep import merge_datasets  # NOQA
-from data.data_prep import prepare_features  # NOQA
+from data.TrainingPreparation.data_prep import handle_missing_values  # NOQA
+from data.TrainingPreparation.data_prep import merge_datasets  # NOQA
+from data.TrainingPreparation.data_prep import prepare_features  # NOQA
 from data.train_split import split_train_validation  # NOQA
-from data.Final_wetter_imputation import analyze_weather_code_distribution, print_missing_analysis, impute_weather_data  # NOQA
+from data.WeatherImputation.Final_wetter_imputation import analyze_weather_code_distribution, print_missing_analysis, impute_weather_data  # NOQA
 
 
 def create_callbacks():
@@ -180,7 +180,7 @@ def plot_history(history):
     ax2.legend()
 
     plt.tight_layout()
-    plt.savefig('training_history.png')
+    plt.savefig('3_model/analysis/training_history.png')
     plt.close()
 
 
@@ -219,7 +219,7 @@ def prepare_and_predict_umsatz_nn(df, learning_rate=0.001):
 
     callbacks = create_callbacks()
     history = model.fit(X_train_scaled, y_train_scaled,
-                        epochs=50,
+                        epochs=10,
                         batch_size=32,
                         validation_data=(X_test_scaled, y_test_scaled),
                         callbacks=callbacks,
@@ -279,7 +279,7 @@ def plot_learning_rate_results(results_df):
     ax4.grid(True)
 
     plt.tight_layout()
-    plt.savefig('learning_rate_analysis.png')
+    plt.savefig('3_model/learning_rate_analysis.png')
     plt.close()
 
 
@@ -291,7 +291,7 @@ def main():
 
     min_lr = 0.000300
     max_lr = 0.000800
-    num_steps = 20
+    num_steps = 2
     learning_rates = np.logspace(np.log10(min_lr), np.log10(max_lr), num_steps)
 
     results = []
@@ -318,11 +318,11 @@ def main():
 
         # Save intermediate results after each iteration
         pd.DataFrame(results).to_csv(
-            'learning_rate_analysis_intermediate.csv', index=False)
+            '3_model/analysis/learning_rate_analysis_intermediate.csv', index=False)
 
     results_df = pd.DataFrame(results)
-    results_df.to_csv('learning_rate_analysis_final.csv', index=False)
-
+    results_df.to_csv('3_model/analysis/learning_rate_analysis_final.csv', index=False)
+    
     plot_learning_rate_results(results_df)
 
     best_lr_idx = results_df['r2_score'].idxmax()

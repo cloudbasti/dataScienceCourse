@@ -2,9 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import sys
 import pandas as pd
-# import numpy as np
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
-# from sklearn.metrics import r2_score, mean_squared_error
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
@@ -16,10 +14,10 @@ matplotlib.use('Agg')
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from data.train_split import split_train_validation  # NOQA
-from data.data_prep import prepare_features  # NOQA
-from data.data_prep import merge_datasets  # NOQA
-from data.data_prep import handle_missing_values  # NOQA
-from data.Final_wetter_imputation import analyze_weather_code_distribution, print_missing_analysis, impute_weather_data  # NOQA
+from data.TrainingPreparation.data_prep import prepare_features  # NOQA
+from data.TrainingPreparation.data_prep import merge_datasets  # NOQA
+from data.TrainingPreparation.data_prep import handle_missing_values  # NOQA
+from data.WeatherImputation.Final_wetter_imputation import prepare_test_data_with_imputation, impute_weather_data  # NOQA
 
 
 def create_product_features(df):
@@ -119,8 +117,6 @@ def create_product_features(df):
 
     return df_with_features, all_features
 
-# ===== MODIFIED: New function for submission prediction =====
-
 
 def prepare_and_predict_submission_nn(train_df, test_df):
     """Neural network model for predicting test data submission, trained on full dataset"""
@@ -177,8 +173,6 @@ def prepare_and_predict_submission_nn(train_df, test_df):
 
     return predictions
 
-# ===== MODIFIED: New main function for submission =====
-
 
 def main():
     print("Loading and preparing training data...")
@@ -188,9 +182,12 @@ def main():
     df_featured = prepare_features(df_imputed)
     df_cleaned = handle_missing_values(df_featured)
 
-    print("\nLoading test data...")
-    # Load test data
-    test_df = pd.read_csv("data/test_final.csv")
+    print("\nPreparing test data...")
+    # Use the imported function to prepare test data with imputation
+    test_data_path = prepare_test_data_with_imputation()
+    
+    # Now load the imputed test data
+    test_df = pd.read_csv(test_data_path)
 
     # Make predictions
     predictions = prepare_and_predict_submission_nn(df_cleaned, test_df)
@@ -201,9 +198,12 @@ def main():
         'Umsatz': predictions.flatten()
     })
 
+    # Ensure directory exists
+    os.makedirs("data/SubmissionFiles", exist_ok=True)
+    
     # Save predictions
-    submission_df.to_csv("data/submission_nn.csv", index=False)
-    print("\nPredictions saved to submission_nn.csv")
+    submission_df.to_csv("data/SubmissionFiles/Network_Submission.csv", index=False)
+    print("\nPredictions saved to data/SubmissionFiles/Network_Submission.csv")
 
 
 if __name__ == "__main__":

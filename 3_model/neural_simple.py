@@ -22,10 +22,10 @@ matplotlib.use('Agg')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.train_split import split_train_validation  # NOQA
-from data.data_prep import prepare_features  # NOQA
-from data.data_prep import merge_datasets  # NOQA
-from data.data_prep import handle_missing_values  # NOQA
-from data.Final_wetter_imputation import impute_weather_data  # NOQA
+from data.TrainingPreparation.data_prep import prepare_features  # NOQA
+from data.TrainingPreparation.data_prep import merge_datasets  # NOQA
+from data.TrainingPreparation.data_prep import handle_missing_values  # NOQA
+from data.WeatherImputation.Final_wetter_imputation import impute_weather_data  # NOQA
 
 
 def create_callbacks():
@@ -214,7 +214,7 @@ def plot_history(history, product_metrics):
         ax4.text(i, v, f'{v:.1f}%', ha='center', va='bottom')
 
     plt.tight_layout()
-    plt.savefig('training_history.png')
+    plt.savefig('3_model/analysis/training_history.png')
     plt.close()
 
 
@@ -256,7 +256,7 @@ def prepare_and_predict_umsatz_nn(df):
     callbacks = create_callbacks()
 
     history = model.fit(X_train_scaled, y_train_scaled,
-                        epochs=50,
+                        epochs=5,
                         batch_size=32,
                         validation_data=(X_test_scaled, y_test_scaled),
                         callbacks=callbacks,

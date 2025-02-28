@@ -9,9 +9,9 @@ import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from data.train_split import split_train_validation  # NOQA
-from data.data_prep import prepare_features, merge_datasets, handle_missing_values  # NOQA
+from data.TrainingPreparation.data_prep import prepare_features, merge_datasets, handle_missing_values  # NOQA
 # from data.data_prep import analyze_weather_codes, analyze_wind_data  # NOQA
-from data.Final_wetter_imputation import analyze_weather_code_distribution, print_missing_analysis, impute_weather_data  # NOQA
+from data.WeatherImputation.Final_wetter_imputation import analyze_weather_code_distribution, print_missing_analysis, impute_weather_data  # NOQA
 
 
 def create_interaction_features(df):

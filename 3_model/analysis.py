@@ -75,8 +75,8 @@ def plot_learning_rate_effects(df):
     ax4.set_title('Product Performance at Best Learning Rate')
     
     plt.tight_layout()
-    plt.savefig('learning_rate_analysis_detailed.png')
+    plt.savefig('3_model/analysis/learning_rate_analysis_detailed.png')
     plt.close()
 
 if __name__ == "__main__":
-    results = load_and_analyze_results('learning_rate_analysis_final.csv')
+    results = load_and_analyze_results('3_model/analysis/learning_rate_analysis_final.csv')
