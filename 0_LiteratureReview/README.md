@@ -1,42 +1,33 @@
 # Literature Review
 
 ## Overview
-This literature review examines prior work on predicting bakery sales using neural network regression, with an emphasis on integrating weather data, historical sales, and event-based factors. The goal is to deepen understanding of the problem domain—sales prediction for six bakery product categories—and identify established approaches. Key questions include: Which models are commonly used? What format does training data take? How much data is typically required? 
+This literature review examines prior work on predicting bakery sales using neural network regression, with an emphasis on integrating weather data, historical sales, and event-based factors. The goal is to deepen understanding of the problem domain—sales prediction for six bakery product categories—and identify established approaches. Key questions include: Which models are commonly used? What format does training data take? How much data is typically required? These are not exactly what we do, but they use neural networks for this task, offering valuable insights into applicable techniques.
 
 ## Approaches or Solutions
-Bakery sales prediction often leverages machine learning, particularly neural networks, to model complex relationships between sales, weather (e.g., temperature, precipitation), and events (e.g., holidays, local festivals). Historical sales data provides seasonal and trend insights, while external factors like weather and events capture demand fluctuations. Neural network regression is a popular choice due to its ability to handle non-linear patterns and multivariate inputs.
+Bakery sales prediction frequently employs neural networks to capture intricate relationships between sales, weather variables (e.g., temperature, precipitation), and events (e.g., holidays, major weather events). Historical sales data uncovers seasonal patterns and trends, while external factors like weather and events account for demand variability. Neural network regression excels in this context due to its capacity to model non-linear interactions and handle diverse, multivariate inputs effectively.
 
 ## Summary of Each Work
 
-- **Source 1: "Daily Retail Demand Forecasting Using Machine Learning with Emphasis on Calendric Special Days"**
-  - [Link](https://www.sciencedirect.com/science/article/pii/S0169207020301855)
-  - **Objective:** Forecast daily demand for a bakery chain’s product categories, focusing on special calendar days (e.g., holidays) and weather impacts.
-  - **Methods:** Compares regression-based neural networks and gradient-boosted decision trees, using historical sales data enriched with weather (temperature, rainfall) and event features (holidays, weekends). Data is formatted as daily time-series records.
-  - **Outcomes:** Neural network regression outperforms traditional methods for perishable goods, achieving lower error rates (e.g., RMSE) on special days, with a dataset of ~2 years of daily sales across multiple stores.
-  - **Relation to the Project:** Demonstrates neural networks’ effectiveness for bakery sales, using similar inputs (weather, events, historical sales). Suggests daily time-series format and moderate data volumes (thousands of records) suffice, though no pretrained models were used.
-
-- **Source 2: "Utilizing Artificial Neural Networks to Predict Demand for Weather-Sensitive Products at Retail Stores"**
+- **Source 1: "Utilizing Artificial Neural Networks to Predict Demand for Weather-Sensitive Products at Retail Stores"**
   - [Link](https://arxiv.org/abs/1711.08325)
   - **Objective:** Predict sales of 111 weather-sensitive products (including bakery items) at Walmart stores during major weather events.
   - **Methods:** Employs artificial neural networks (ANNs) with regression outputs, trained on historical sales, weather data (e.g., storms, temperature), and event flags. Data is preprocessed into structured tables with daily granularity.
   - **Outcomes:** ANN models reduce forecasting errors compared to linear regression, using 5 years of data (millions of records) across 45 stores, capturing weather-driven demand spikes effectively.
   - **Relation to the Project:** Confirms ANNs as a robust model for weather-influenced bakery sales prediction. Highlights the need for large historical datasets (millions of points) and structured tabular data, though pretrained models aren’t mentioned.
 
-- **Source 3: "Machine Learning Techniques for Grocery Sales Forecasting by Analyzing Historical Data"**
-  - [Link](https://link.springer.com/chapter/10.1007/978-3-031-21435-6_11)
-  - **Objective:** Develop a sales forecasting model for grocery products, including bakery items, using historical and external data.
-  - **Methods:** Applies feedforward neural network regression, alongside other methods (e.g., random forest), with inputs like historical sales, weather conditions, and promotional events. Training data is formatted as time-series with labeled daily sales (~5.2 million records over 6 years).
-  - **Outcomes:** Neural network regression achieves high accuracy for perishable categories, outperforming simpler models when trained on large, diverse datasets.
-  - **Relation to the Project:** Validates neural networks for bakery sales, suggesting a time-series format with weather and event features. Indicates millions of records enhance performance, with no pretrained models applied.
+- **Source 2: "Food Sales Prediction with Meteorological Data — A Case Study of a Japanese Chain Supermarket"**
+  - [Link](https://link.springer.com/chapter/10.1007/978-3-319-61845-6_10)
+  - **Objective:** Predict sales of weather-sensitive food products, including bakery items, at a Japanese chain supermarket using meteorological data.
+  - **Methods:** Utilizes a deep learning approach combining long short-term memory (LSTM) networks and stacked denoising autoencoders, trained on historical sales data paired with weather variables (e.g., temperature, precipitation). Data is structured as time-series with daily sales records.
+  - **Outcomes:** The method outperforms traditional machine learning models by 19.3%, effectively predicting sales for weather-sensitive items like bakery goods, based on a large historical dataset spanning multiple years.
+  - **Relation to the Project:** Supports the use of neural networks (specifically LSTM) for bakery sales prediction influenced by weather, aligning with your focus on six product categories. Emphasizes time-series data with weather inputs and suggests substantial historical data improves accuracy, with no mention of pretrained models.
 
 ---
 
 ## Additional Insights
-- **Common Models:** Neural network regression (e.g., feedforward ANNs) is prevalent for bakery sales prediction due to its ability to model non-linear effects of weather and events. Variants like LSTM could also apply for time-series dependencies.
-- **Training Data Format:** Data is typically structured as daily time-series tables, with columns for sales (numeric), weather (e.g., temperature, precipitation), and events (categorical flags, e.g., "holiday = 1").
-- **Data Volume:** Studies use 2–6 years of daily data, ranging from thousands to millions of records, depending on store and product scale. Smaller datasets (thousands) work with fine-tuning, while larger ones (millions) boost accuracy.
-- **Pretrained Models:** None of these sources use pretrained models; they train custom neural networks from scratch, tailored to specific sales and external data, suggesting this is standard for niche retail domains like bakeries.
+- **Common Models:** Neural network regression, including feedforward ANNs and LSTM variants, is widely adopted for bakery sales prediction due to its strength in modeling non-linear effects of weather and events. These approaches suit the dynamic nature of time-series data with multiple influencing factors.
+- **Training Data Format:** Data is consistently organized as daily time-series tables, featuring columns for sales (numeric), weather variables (e.g., temperature, precipitation as continuous values), and event indicators (categorical flags, e.g., "storm = 1" or "holiday = 1").
+- **Data Volume:** Studies leverage datasets spanning multiple years, with Source 1 using 5 years (millions of records) and Source 2 implying a similarly large multi-year scope. Larger datasets enhance predictive accuracy, though the exact volume varies by context.
+- **Pretrained Models:** Neither source employs pretrained models; both develop custom neural networks tailored to their specific datasets and objectives, indicating this is a common practice for specialized retail forecasting tasks like bakery sales.
 
 ---
-
-This review aligns with your project’s focus on neural network regression for bakery sales across six product categories, using weather and event data. If you’d like me to refine further (e.g., specific product categories, more sources), let me know!
