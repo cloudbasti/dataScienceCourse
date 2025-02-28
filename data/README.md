@@ -34,7 +34,7 @@ Files:
 
 ### WeatherImputation
 
-The folder [`WeatherImputation`](./WeatherImputation) contains scripts for handling missing weather data through imputation techniques.
+The folder [`WeatherImputation`](./WeatherImputation) contains scripts for handling missing weather data through imputation techniques. The first Script `Wetter_Imputation.py` acts on the `wetter.csv` file wheras `Final_wetter_imputation.py` contains two functions whcih can be imported. One of these consumes a Dataframe and does imputation on this and the other does the imputation on a final csv file for submission. One would indeed need only one script or service containing one or two handlers, this should be simplified later on.
 
 Files:
 - [`Wetter_Imputation.py`](./WeatherImputation/Wetter_Imputation.py) - Initial script that examines the raw weather data and performs imputation

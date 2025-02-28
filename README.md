@@ -1,7 +1,30 @@
-# Introduction to Machine Learning and Data Science
+I'll add the "How to Run the Code" section to your repository description.
 
 ## Repository Link
 https://github.com/cloudbasti/dataScienceCourse
+
+## How to Run the Code
+
+### Presteps
+1. Make sure you are in the DataScienceCourse directory (in terminal)
+2. Run the startup script:
+   ```
+   python startup_script.py
+   ```
+
+### Training
+1. Regression model:
+   ```
+   python 2_BaselineModel/MultipleLinearRegression.py
+   ```
+2. Neural Network:
+   ```
+   python 3_Model/neural_simple.py
+   ```
+3. Learning Rate optimization:
+   ```
+   python 3_Model/learningRate.py
+   ```
 
 ## Project Description
 
