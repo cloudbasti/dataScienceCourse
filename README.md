@@ -1,7 +1,11 @@
-I'll add the "How to Run the Code" section to your repository description.
+# Introduction to Machine Learning and Data Science
 
 ## Repository Link
 https://github.com/cloudbasti/dataScienceCourse
+
+## Project Description
+
+This project aims to predict bakery sales based on historical sales data for various products, incorporating weather data, events such as Kiel Week, and additional features.
 
 ## How to Run the Code
 
