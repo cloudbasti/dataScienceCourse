@@ -1,40 +1,5 @@
 # Literature Review
 
-Approaches or solutions that have been tried before on similar projects.
-
-**Summary of Each Work**:
-
-- **Source 1**: [Title of Source 1]
-
-  - **[Link]()**
-  - **Objective**:
-  - **Methods**:
-  - **Outcomes**:
-  - **Relation to the Project**:
-
-- **Source 2**: [Title of Source 2]
-
-  - **[Link]()**
-  - **Objective**:
-  - **Methods**:
-  - **Outcomes**:
-  - **Relation to the Project**:
-
-- **Source 3**: [Title of Source 3]
-
-  - **[Link]()**
-  - **Objective**:
-  - **Methods**:
-  - **Outcomes**:
-  - **Relation to the Project**:
-
-
-  Since your project focuses on **bakery sales prediction** using **neural network regression**, incorporating **weather data**, **historical sales data**, and **events** across **six product categories**, I’ll tailor a literature review to fit your specific needs. I’ve searched for and identified relevant, recent references that align with your project’s scope. Below, I’ll provide a revised literature review following your template, summarizing three authoritative sources that address similar problems, models, data usage, and outcomes. These will help you answer your key questions: common models, training data format, data volume, and pretrained model availability.
-
----
-
-# Literature Review
-
 ## Overview
 This literature review examines prior work on predicting bakery sales using neural network regression, with an emphasis on integrating weather data, historical sales, and event-based factors. The goal is to deepen understanding of the problem domain—sales prediction for six bakery product categories—and identify established approaches. Key questions include: Which models are commonly used? What format does training data take? How much data is typically required? 
 
