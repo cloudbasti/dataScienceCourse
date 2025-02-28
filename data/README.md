@@ -15,7 +15,7 @@ This folder contains all data-related files and scripts for the sales prediction
 
 ### OriginalData
 
-This folder contains the original raw data files before any processing or transformation. These serve as the starting point for our data pipeline.
+The folder [`OriginalData`](./OriginalData) contains the original raw data files before any processing or transformation. These serve as the starting point for our data pipeline.
 
 Files:
 - [`kiwo.csv`](./OriginalData/kiwo.csv) - Original sales data
@@ -24,7 +24,7 @@ Files:
 
 ### HolidayData
 
-This folder contains scripts and generated CSV files for bank holidays and school holidays, which are used as features in our prediction models.
+The folder [`HolidayData`](./HolidayData) contains scripts and generated CSV files for bank holidays and school holidays, which are used as features in our prediction models.
 
 Files:
 - [`create_bank_holidays.py`](./HolidayData/create_bank_holidays.py) - Script to generate bank holiday data
@@ -34,7 +34,7 @@ Files:
 
 ### WeatherImputation
 
-This folder contains scripts for handling missing weather data through imputation techniques.
+The folder [`WeatherImputation`](./WeatherImputation) contains scripts for handling missing weather data through imputation techniques.
 
 Files:
 - [`Wetter_Imputation.py`](./WeatherImputation/Wetter_Imputation.py) - Initial script that examines the raw weather data and performs imputation
@@ -43,7 +43,7 @@ Files:
 
 ### TrainingPreparation
 
-This folder contains reusable code for data preparation and feature engineering.
+The folder [`TrainingPreparation`](./TrainingPreparation) contains reusable code for data preparation and feature engineering.
 
 Files:
 - [`data_prep.py`](./TrainingPreparation/data_prep.py) - Contains functions for merging datasets, handling missing values, and adding/preparing features
@@ -51,17 +51,17 @@ Files:
 
 ### SubmissionPreparation
 
-This folder contains scripts for preparing new test data for model predictions.
+The folder [`SubmissionPreparation`](./SubmissionPreparation) contains scripts for preparing new test data for model predictions.
 
 Files:
 - [`prepareTestData.py`](./SubmissionPreparation/prepareTestData.py) - Script for merging and preparing test datasets, including temperature imputation
 - [`prepared_test_data.csv`](./SubmissionPreparation/prepared_test_data.csv) - Prepared test data
-- [`test_data_final_after_imputation.csv`](./SubmissionPreparation/test_data_final_after_imputation.csv) - Final test data after weather imputation
+- [`test_data_final_after_imputation.csv`](./SubmissionPreparation/test_data_final_after_imputation.csv) - Final test data after all imputations
 - [`test.csv`](./SubmissionPreparation/test.csv) - Raw test file
 
 ### SubmissionFiles
 
-This folder contains the final files used for model submission.
+The folder [`SubmissionFiles`](./SubmissionFiles) contains the final files used for model submission.
 
 Files:
 - [`Network_Submission.csv`](./SubmissionFiles/Network_Submission.csv) - Neural network model submission
