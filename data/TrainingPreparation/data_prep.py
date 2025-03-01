@@ -62,15 +62,13 @@ def prepare_features(df):
 
     df_prepared = add_time_series_features(df_prepared)
 
-    # for the weather also the most frequent ones might need to get their own features.
-
     # Create weather categories based on weather codes (Wettercode)
     df_prepared['weather_clear'] = df_prepared['Wettercode'].between(
         0, 9, inclusive='both').astype(int)
     df_prepared['weather_no_precip'] = df_prepared['Wettercode'].between(
         10, 19, inclusive='both').astype(int)
     df_prepared['weather_past_weather'] = df_prepared['Wettercode'].between(
-        20, 29, inclusive='both').astype(int)  # Added this category
+        20, 29, inclusive='both').astype(int)
     df_prepared['weather_dust_sand'] = df_prepared['Wettercode'].between(
         30, 39, inclusive='both').astype(int)
     df_prepared['weather_fog'] = df_prepared['Wettercode'].between(
@@ -86,40 +84,13 @@ def prepare_features(df):
     df_prepared['weather_thunderstorm'] = df_prepared['Wettercode'].between(
         91, 99, inclusive='both').astype(int)
 
-    # for the wind the analysis many data is in moderate wind, so this might also be split to
-    # a finer accuracy
+    # Wind speed categories
     df_prepared['wind_calm'] = (
         df_prepared['Windgeschwindigkeit'] < 5).astype(int)
     df_prepared['wind_moderate'] = ((df_prepared['Windgeschwindigkeit'] >= 5) &
-                                    (df_prepared['Windgeschwindigkeit'] < 15)).astype(int)
+                                   (df_prepared['Windgeschwindigkeit'] < 15)).astype(int)
     df_prepared['wind_strong'] = (
-        df_prepared['Windgeschwindigkeit'] >= 15).astype(int) 
-    '''df_prepared['wind_0_5'] = (
-        (df_prepared['Windgeschwindigkeit'] >= 0) &
-        (df_prepared['Windgeschwindigkeit'] < 5)).astype(int)
-
-    df_prepared['wind_5_10'] = (
-        (df_prepared['Windgeschwindigkeit'] >= 5) &
-        (df_prepared['Windgeschwindigkeit'] < 10)).astype(int)
-
-    df_prepared['wind_10_15'] = (
-        (df_prepared['Windgeschwindigkeit'] >= 10) &
-        (df_prepared['Windgeschwindigkeit'] < 15)).astype(int)
-
-    df_prepared['wind_15_20'] = (
-        (df_prepared['Windgeschwindigkeit'] >= 15) &
-        (df_prepared['Windgeschwindigkeit'] < 20)).astype(int)
-
-    df_prepared['wind_20_25'] = (
-        (df_prepared['Windgeschwindigkeit'] >= 20) &
-        (df_prepared['Windgeschwindigkeit'] < 25)).astype(int)
-
-    df_prepared['wind_25_30'] = (
-        (df_prepared['Windgeschwindigkeit'] >= 25) &
-        (df_prepared['Windgeschwindigkeit'] < 30)).astype(int)
-
-    df_prepared['wind_above_30'] = (
-        df_prepared['Windgeschwindigkeit'] >= 30).astype(int)'''
+        df_prepared['Windgeschwindigkeit'] >= 15).astype(int)
 
     # New Year's Eve (highest turnover days)
     df_prepared['is_nye'] = (df_prepared['Datum'].dt.month == 12) & (
@@ -208,37 +179,9 @@ def prepare_features(df):
 
 
 def handle_missing_values(df):
-    df_cleaned = df.copy()
-
-    # Define columns to check for missing values
-    columns_to_check = ['Temperatur', 'Bewoelkung', 'Umsatz', 'Warengruppe']
-
-    # Store original length
-    original_len = len(df_cleaned)
-
-    # Identify rows with missing values
-    missing_mask = df_cleaned[columns_to_check].isnull().any(axis=1)
-    deleted_rows = df_cleaned[missing_mask]
-
-    # Save deleted rows to CSV
-    deleted_rows.to_csv("data/deleted.csv", index=False)
-
-    # Drop rows with missing values in specified columns
-    df_cleaned = df_cleaned.dropna(subset=columns_to_check)
-
-    # Print information about removed rows
-    rows_removed = original_len - len(df_cleaned)
-    print(f"Removed {rows_removed} rows with missing values")
-    print(f"Retained {len(df_cleaned)} rows")
-
-    # Print which columns had missing values
-    missing_counts = df[columns_to_check].isnull().sum()
-    print("\nMissing values by column:")
-    for col, count in missing_counts.items():
-        if count > 0:
-            print(f"{col}: {count} missing values")
-
-    return df_cleaned
+    # Simply return the dataframe as is, since we're using imputation instead
+    # of removing rows with missing values
+    return df.copy()
 
 
 def merge_datasets():
