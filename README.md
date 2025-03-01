@@ -94,5 +94,5 @@ Building on this foundation, we implemented a neural network architecture that f
 1. **[Literature Review](0_LiteratureReview/README.md)**
 2. **[Dataset Characteristics](1_DatasetCharacteristics/README.md)**
 3. **[Baseline Model](2_BaselineModel/README.md)**
-4. **[Model Definition and Evaluation](3_Model/README.md)**
-5. **[Presentation](4_Presentation/README.md)**
+4. **[Model Definition and Evaluation](3_model/README.md)**
+5. **[Presentation](4_Presentation/)**
